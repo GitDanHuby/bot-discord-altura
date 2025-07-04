@@ -1,5 +1,4 @@
 import time
-from keep_alive import keep_alive
 import discord
 import os
 from dotenv import load_dotenv
@@ -74,7 +73,6 @@ async def on_member_join(member):
         await welcome_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
-keep_alive()  # Liga o servidor web
 print("Servidor web ligado. Aguardando 5 segundos antes de conectar o bot...")
 time.sleep(5) # Adiciona uma pausa de 5 segundos
 client.run(TOKEN) # Conecta o bot ao Discord
