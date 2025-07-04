@@ -25,6 +25,28 @@ async def ping(interaction: discord.Interaction):
     """Responde com Pong!"""
     await interaction.response.send_message("Pong! 🏓")
 
+# ADICIONE ESTE NOVO BLOCO DE CÓDIGO ABAIXO DO COMANDO /ping
+
+# --- COMANDO DE BARRA /ip ---
+@tree.command(name="ip", description="Mostra o endereço de IP para se conectar ao servidor SAMP.")
+async def ip(interaction: discord.Interaction):
+    """Envia uma mensagem bonita com o IP do servidor."""
+    
+    # Cria a mensagem usando um Embed, para ficar mais estilizado
+    embed_ip = discord.Embed(
+        title="🚀 Conecte-se ao Altura RolePlay City!",
+        description="Use o IP abaixo para entrar na melhor cidade do SAMP!",
+        color=discord.Color.blue() # Ou qualquer outra cor que você goste
+    )
+    
+    # Adiciona o campo principal com o IP, fácil de copiar
+    embed_ip.add_field(name="Endereço do Servidor:", value="`179.127.16.157:29015`", inline=False)
+    
+    # Adiciona um rodapé para dar um toque final
+    embed_ip.set_footer(text="Clique no IP para copiar. Te vemos lá!")
+    
+    # Envia a mensagem para o usuário que digitou o comando
+    await interaction.response.send_message(embed=embed_ip)
 @client.event
 async def on_ready():
     """Função chamada quando o bot se conecta com sucesso."""
