@@ -1,10 +1,11 @@
 # =================================================================================
-# ARQUIVO main.py COMPLETO - COM SISTEMA DE MODERAÇÃO (/aviso)
+# ARQUIVO main.py FINAL - COM SISTEMA DE TICKETS
 # =================================================================================
 
 # --- Seção de Imports ---
 import discord
 from discord import app_commands
+from discord.ui import View, Select # Importa as ferramentas para UI
 import os
 from dotenv import load_dotenv
 from samp_client.client import SampClient
@@ -29,11 +30,78 @@ tree = app_commands.CommandTree(client)
 
 xp_cooldowns = {}
 
+# --- CLASSE DA VIEW DO TICKET (A LÓGICA DO MENU) ---
+class TicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None) # timeout=None faz a view ser permanente
+
+    @discord.ui.select(
+        custom_id="ticket_menu_v2",
+        placeholder="Selecione o tipo de ticket que deseja abrir...",
+        min_values=1,
+        max_values=1,
+        options=[
+            discord.SelectOption(label="Compra", emoji="🛒", description="Para dúvidas ou problemas com compras.", value="compra"),
+            discord.SelectOption(label="Suporte", emoji="⛑️", description="Preciso de ajuda com algo no servidor.", value="suporte"),
+            discord.SelectOption(label="Reportar Bug", emoji="👾", description="Encontrei um bug e quero reportá-lo.", value="reportar_bug"),
+            discord.SelectOption(label="Denúncia", emoji="🚨", description="Para denúncias de jogadores.", value="denuncia")
+        ]
+    )
+    async def ticket_menu_callback(self, interaction: discord.Interaction, select: Select):
+        # --- IDs JÁ CONFIGURADOS! ---
+        ID_CARGO_STAFF = 1380957727748263966
+
+        mapa_categorias = {
+            "compra": 1386744693659799603,
+            "suporte": 1386764302828048494,
+            "reportar_bug": 1386772360820166706,
+            "denuncia": 1386772324488974456
+        }
+
+        option_value = select.values[0]
+        option_label = [opt.label for opt in select.options if opt.value == option_value][0]
+        
+        user = interaction.user
+        guild = interaction.guild
+
+        id_categoria_correta = mapa_categorias.get(option_value)
+        categoria = guild.get_channel(id_categoria_correta)
+        cargo_staff = guild.get_role(ID_CARGO_STAFF)
+
+        if not categoria or not cargo_staff:
+            await interaction.response.send_message("Erro de configuração do bot. Contate um administrador.", ephemeral=True)
+            return
+
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
+            cargo_staff: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
+        }
+
+        nome_canal = f"ticket-{option_label.lower().replace(' ', '-')}-{user.name}"
+        ticket_channel = await guild.create_text_channel(name=nome_canal, category=categoria, overwrites=overwrites)
+        
+        embed_ticket = discord.Embed(title=f"Ticket de {option_label} Aberto!", description=f"Olá {user.mention}, obrigado por nos contatar. \n\nPor favor, descreva seu problema ou dúvida em detalhes. Um membro da equipe <@&{ID_CARGO_STAFF}> virá te ajudar em breve.", color=discord.Color.green())
+        await ticket_channel.send(embed=embed_ticket)
+        
+        await interaction.response.send_message(f"✅ Seu ticket foi criado com sucesso! Acesse: {ticket_channel.mention}", ephemeral=True)
+
+
 # =================================================================================
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
 # =================================================================================
 
-# ... (Todos os seus comandos antigos: /ping, /ip, /regras, etc. ficam aqui) ...
+@tree.command(name="configurar_tickets", description="Posta o painel de abertura de tickets neste canal.")
+@app_commands.checks.has_permissions(manage_guild=True)
+async def configurar_tickets(interaction: discord.Interaction):
+    embed = discord.Embed(title="🎫 Central de Atendimento - Altura RP City", description="**ESCOLHA O TIPO DE TICKET QUE DESEJA ABRIR NO MENU ABAIXO**\n\nÉ importante lembrar-se de abrir tickets apenas quando necessário. Nossa equipe está aqui para ajudar e fornecer suporte sempre que você precisar.", color=discord.Color.blue())
+    embed.set_thumbnail(url=client.user.display_avatar.url)
+    embed.set_footer(text="© Altura RolePlay / SEASON 1 ✓")
+    view = TicketView()
+    await interaction.channel.send(embed=embed, view=view)
+    await interaction.response.send_message("Painel de tickets configurado!", ephemeral=True)
+
+# ... (O resto dos seus comandos, como /ping, /ip, etc., continuam aqui) ...
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong! 🏓")
@@ -136,7 +204,6 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
 @tree.command(name="set_goodbye_message", description="Define a mensagem de despedida do servidor (Staff only).")
 @app_commands.checks.has_permissions(manage_guild=True)
 async def set_goodbye_message(interaction: discord.Interaction, message: str):
-    from database_setup import SessionLocal, Setting
     db = SessionLocal()
     try:
         setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
@@ -149,57 +216,38 @@ async def set_goodbye_message(interaction: discord.Interaction, message: str):
         await interaction.response.send_message("✅ Mensagem de despedida definida com sucesso!", ephemeral=True)
     finally:
         db.close()
-# --- NOVO COMANDO /aviso ---
-@tree.command(name="aviso", description="Envia um aviso para um membro e registra em um canal de logs.")
-@app_commands.checks.has_permissions(kick_members=True) # Só membros com permissão de "Expulsar Membros" podem usar
-async def aviso(interaction: discord.Interaction, membro: discord.Member, motivo: str):
-    ID_CANAL_LOGS = 1390917419748299002 # <<<<<< COLOQUE AQUI O ID DO SEU CANAL DE LOGS DA STAFF
 
-    # Evita que um staff avise a si mesmo ou a outro bot
+@tree.command(name="aviso", description="Envia um aviso para um membro e registra em um canal de logs.")
+@app_commands.checks.has_permissions(kick_members=True)
+async def aviso(interaction: discord.Interaction, membro: discord.Member, motivo: str):
+    ID_CANAL_LOGS = 1390917419748299002
     if membro == interaction.user:
         await interaction.response.send_message("Você não pode avisar a si mesmo.", ephemeral=True)
         return
     if membro.bot:
         await interaction.response.send_message("Você não pode avisar um bot.", ephemeral=True)
         return
-
-    # Tenta enviar a DM para o membro
     try:
-        embed_dm = discord.Embed(
-            title="🚨 Você Recebeu um Aviso!",
-            description=f"Você foi avisado no servidor **{interaction.guild.name}**.",
-            color=discord.Color.yellow()
-        )
+        embed_dm = discord.Embed(title="🚨 Você Recebeu um Aviso!", description=f"Você foi avisado no servidor **{interaction.guild.name}**.", color=discord.Color.yellow())
         embed_dm.add_field(name="Motivo do Aviso", value=motivo, inline=False)
         embed_dm.set_footer(text=f"Aviso aplicado por: {interaction.user.name}")
         await membro.send(embed=embed_dm)
         dm_enviada = True
     except discord.Forbidden:
-        # Acontece se o membro bloqueou DMs do servidor
         dm_enviada = False
-
-    # Envia o log no canal da staff
     canal_logs = client.get_channel(ID_CANAL_LOGS)
     if canal_logs:
-        embed_log = discord.Embed(
-            title="📝 Log de Aviso",
-            color=discord.Color.orange(),
-            timestamp=datetime.now()
-        )
+        embed_log = discord.Embed(title="📝 Log de Aviso", color=discord.Color.orange(), timestamp=datetime.now())
         embed_log.add_field(name="Membro Avisado", value=membro.mention, inline=True)
         embed_log.add_field(name="Aplicado por", value=interaction.user.mention, inline=True)
         embed_log.add_field(name="Motivo", value=motivo, inline=False)
         embed_log.set_footer(text=f"ID do Membro: {membro.id}")
         await canal_logs.send(embed=embed_log)
-
-    # Envia a confirmação para o staff
     confirmacao = f"✅ Aviso para {membro.mention} registrado com sucesso."
     if not dm_enviada:
         confirmacao += "\n⚠️ Não foi possível enviar a DM para o membro (provavelmente ele tem DMs desativadas)."
-    
     await interaction.response.send_message(confirmacao, ephemeral=True)
 
-# Tratador de erro para o comando /aviso
 @aviso.error
 async def aviso_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.errors.MissingPermissions):
@@ -208,13 +256,14 @@ async def aviso_error(interaction: discord.Interaction, error: app_commands.AppC
         await interaction.response.send_message("Ocorreu um erro inesperado.", ephemeral=True)
         print(error)
 
+
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
 
-# ... (on_ready, on_message, on_member_join, on_member_update ficam aqui, exatamente como antes) ...
 @client.event
 async def on_ready():
+    client.add_view(TicketView())
     await tree.sync()
     print("Comandos de barra sincronizados.")
     activity = discord.Game(name="na cidade do Altura RP City")
@@ -239,7 +288,7 @@ async def on_message(message):
             user = User(id=user_id, xp=0, level=1)
             db.add(user)
         user.xp += xp_ganho
-        xp_necessario = (5 * (user.level ** 2)) + (50 * user.level) + 100
+        xp_necessario = (5 * (user.level ** 2)) + (50 * level) + 100
         if user.xp >= xp_necessario:
             user.level += 1
             user.xp -= xp_necessario
@@ -251,11 +300,12 @@ async def on_message(message):
 
 @client.event
 async def on_member_join(member):
-    from database_setup import SessionLocal, Setting
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
+
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
+        
         db = SessionLocal()
         try:
             setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
@@ -265,7 +315,9 @@ async def on_member_join(member):
                 welcome_text = f"Seja muito bem-vindo(a), {{member.mention}}, ao {{server_name}}! Configure a mensagem de boas-vindas no dashboard."
         finally:
             db.close()
+
         description_text = welcome_text.format(member=member, server=guild, member_mention=member.mention, member_name=member.name, server_name=guild.name, server_member_count=member_count)
+        
         embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(70, 130, 180))
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
@@ -298,51 +350,29 @@ async def on_member_update(before, after):
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
-# --- NOVO EVENTO on_message_delete (COM LAYOUT ATUALIZADO) ---
 @client.event
 async def on_message_delete(message):
     if message.author.bot:
         return
-
-    ID_CANAL_LOGS_DELETADOS = 1386759472126623874 # <<<<<< COLOQUE AQUI O ID DO CANAL DE LOGS
-
+    ID_CANAL_LOGS_DELETADOS = 1386759472126623874
     canal_logs = client.get_channel(ID_CANAL_LOGS_DELETADOS)
     if not canal_logs:
         return
-
     conteudo = message.content if message.content else "Nenhum texto na mensagem (provavelmente uma imagem ou embed)."
-
-    # Novo layout do Embed
-    embed = discord.Embed(
-        description="**📝 Mensagem de texto deletada**",
-        color=discord.Color.dark_red(),
-        timestamp=datetime.now()
-    )
-    # Define o autor do embed como o autor da mensagem deletada
+    embed = discord.Embed(description="**📝 Mensagem de texto deletada**", color=discord.Color.dark_red(), timestamp=datetime.now())
     embed.set_author(name=f"{message.author.name}", icon_url=message.author.display_avatar.url)
-    
-    # Adiciona campos para Canal e Mensagem
     embed.add_field(name="Canal de texto:", value=message.channel.mention, inline=False)
     embed.add_field(name="Mensagem:", value=f"```{conteudo}```", inline=False)
-    
-    # Adiciona o ID do usuário no rodapé para referência
     embed.set_footer(text=f"ID do Usuário: {message.author.id}")
-    
     await canal_logs.send(embed=embed)
-
-
 
 @client.event
 async def on_member_remove(member):
-    from database_setup import SessionLocal, Setting
-
-    goodbye_channel_name = '✋│ᴇxɪᴛ'  # <<<<<< ALTERE PARA O NOME DO SEU CANAL
+    goodbye_channel_name = '✋│ᴇxɪᴛ'
     goodbye_channel = discord.utils.get(member.guild.text_channels, name=goodbye_channel_name)
-
     if goodbye_channel:
         guild = member.guild
-        member_count = guild.member_count - 1 # Decrementa a contagem já que o membro saiu
-
+        member_count = guild.member_count # The count is already updated
         db = SessionLocal()
         try:
             setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
@@ -375,3 +405,4 @@ if __name__ == "__main__":
     setup_database()
     start_web_server()
     client.run(TOKEN)
+        
