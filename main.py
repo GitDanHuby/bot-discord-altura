@@ -1,4 +1,4 @@
-# SEU ARQUIVO main.py FINAL E COMPLETO
+# SEU ARQUIVO main.py FINAL E CORRIGIDO
 
 import discord
 from discord import app_commands
@@ -50,7 +50,7 @@ async def regras(interaction: discord.Interaction):
     **15. Recrutamento só nos canais apropriados.**
     **16. Proibido transmitir outros servidores SA-MP em call.**
     **17. Você é responsável pela vinculação correta da sua conta.**
-    
+
     > Ao permanecer no servidor, você aceita todas as regras.
     *📅 Atualizado em: 16/06/2025*
     """
@@ -60,9 +60,9 @@ async def regras(interaction: discord.Interaction):
 @tree.command(name="redes_sociais", description="Mostra as redes sociais oficiais do servidor.")
 async def redes_sociais(interaction: discord.Interaction):
     embed_redes = discord.Embed(title="📱 Nossas Redes Sociais", description="Siga-nos para ficar por dentro de tudo!", color=discord.Color.purple())
-    embed_redes.add_field(name="YouTube", value="[Clique aqui para acessar](https://youtube.com/@snow_pr25)", inline=False)
-    embed_redes.add_field(name="TikTok", value="[Clique aqui para acessar](https://www.tiktok.com/@snow_pr37?_t=8xl9kFMFyDQ&_r=1)", inline=False)
-    embed_redes.add_field(name="Instagram", value="[Clique aqui para acessar](https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==)", inline=False)
+    embed_redes.add_field(name="YouTube", value="https://youtube.com/@snow_pr25", inline=False)
+    embed_redes.add_field(name="TikTok", value="https://www.tiktok.com/@snow_pr37?_t=8xl9kFMFyDQ&_r=1", inline=False)
+    embed_redes.add_field(name="Instagram", value="https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==", inline=False)
     await interaction.response.send_message(embed=embed_redes)
 
 @tree.command(name="status", description="Verifica o status do servidor SAMP.")
@@ -102,11 +102,11 @@ async def on_ready():
     """Função chamada quando o bot se conecta com sucesso."""
     await tree.sync()
     print("Comandos de barra sincronizados.")
-    
+
     # --- STATUS PERSONALIZADO DO BOT ---
     activity = discord.Game(name="na cidade do Altura RP City")
     await client.change_presence(status=discord.Status.online, activity=activity)
-    
+
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
     print(f'Status do bot definido para: {activity.name}')
@@ -118,8 +118,9 @@ async def on_member_join(member):
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
+        # --- CORREÇÃO AQUI! Menciona o membro que entrou ---
         description_text = f"""
-👉 <@519353941255913487> 👋✨ Seja muito bem-vindo(a), ao Altura RolePlay City — onde a sua história começa nas alturas! 🚁🌆
+👉 <@!{member.id}> 👋✨ Seja muito bem-vindo(a), {member.mention}, ao Altura RolePlay City — onde a sua história começa nas alturas! 🚁🌆
 🛬 Você acaba de pousar na cidade mais viva e realista do SAMP! Aqui, cada escolha conta e o roleplay é levado a sério.
 👥 Agora somos **{member_count} membros** vivendo essa experiência com você! 🎉
 📝 **Antes de iniciar sua jornada:**
