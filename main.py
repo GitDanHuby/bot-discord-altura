@@ -120,7 +120,7 @@ async def on_member_join(member):
         member_count = guild.member_count
         # --- CORREÇÃO AQUI! Menciona o membro que entrou ---
         description_text = f"""
-👉 <@!{member.id}> 👋✨ Seja muito bem-vindo(a), {member.mention}, ao Altura RolePlay City — onde a sua história começa nas alturas! 🚁🌆
+👉 <@!{member.id}> 👋✨ Seja muito bem-vindo(a), ao Altura RolePlay City — onde a sua história começa nas alturas! 🚁🌆
 🛬 Você acaba de pousar na cidade mais viva e realista do SAMP! Aqui, cada escolha conta e o roleplay é levado a sério.
 👥 Agora somos **{member_count} membros** vivendo essa experiência com você! 🎉
 📝 **Antes de iniciar sua jornada:**
