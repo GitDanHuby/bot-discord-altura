@@ -1,11 +1,11 @@
 # =================================================================================
-# ARQUIVO main.py FINAL - COM SISTEMA DE TICKETS
+# ARQUIVO main.py DEFINITIVO - COM TUDO (INCLUINDO SISTEMA DE TICKET COMPLETO)
 # =================================================================================
 
 # --- Seção de Imports ---
 import discord
 from discord import app_commands
-from discord.ui import View, Select # Importa as ferramentas para UI
+from discord.ui import View, Select, Button, button
 import os
 from dotenv import load_dotenv
 from samp_client.client import SampClient
@@ -30,16 +30,54 @@ tree = app_commands.CommandTree(client)
 
 xp_cooldowns = {}
 
-# --- CLASSE DA VIEW DO TICKET (A LÓGICA DO MENU) ---
+# --- LÓGICA DOS BOTÕES PARA FECHAR TICKET ---
+
+class ConfirmCloseView(View):
+    def __init__(self):
+        super().__init__(timeout=60)
+        self.value = None
+
+    @button(label="Confirmar Fechamento", style=discord.ButtonStyle.danger, custom_id="confirm_close_final_v3")
+    async def confirm(self, interaction: discord.Interaction, button: Button):
+        try:
+            await interaction.response.send_message("✅ Ticket fechado. O canal será deletado em 5 segundos.", ephemeral=True)
+            time.sleep(5)
+            await interaction.channel.delete()
+        except Exception as e:
+            print(f"Erro ao deletar canal: {e}")
+        self.value = True
+        self.stop()
+
+    @button(label="Cancelar", style=discord.ButtonStyle.secondary, custom_id="cancel_close_final_v3")
+    async def cancel(self, interaction: discord.Interaction, button: Button):
+        await interaction.message.delete()
+        await interaction.response.send_message("❌ Ação cancelada.", ephemeral=True)
+        self.value = False
+        self.stop()
+
+class CloseTicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @button(label="🔒 Fechar Ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket_button_final_v3")
+    async def close_ticket(self, interaction: discord.Interaction, button: Button):
+        if not interaction.user.guild_permissions.manage_channels:
+            await interaction.response.send_message("❌ Você não tem permissão para fechar este ticket.", ephemeral=True)
+            return
+
+        view = ConfirmCloseView()
+        await interaction.response.send_message("Tem certeza que deseja fechar este ticket? Esta ação não pode ser desfeita.", view=view, ephemeral=True)
+        await view.wait()
+
+# --- CLASSE DA VIEW DO TICKET (O MENU) ---
 class TicketView(View):
     def __init__(self):
-        super().__init__(timeout=None) # timeout=None faz a view ser permanente
+        super().__init__(timeout=None)
 
     @discord.ui.select(
-        custom_id="ticket_menu_v2",
+        custom_id="ticket_menu_v3",
         placeholder="Selecione o tipo de ticket que deseja abrir...",
-        min_values=1,
-        max_values=1,
+        min_values=1, max_values=1,
         options=[
             discord.SelectOption(label="Compra", emoji="🛒", description="Para dúvidas ou problemas com compras.", value="compra"),
             discord.SelectOption(label="Suporte", emoji="⛑️", description="Preciso de ajuda com algo no servidor.", value="suporte"),
@@ -48,14 +86,12 @@ class TicketView(View):
         ]
     )
     async def ticket_menu_callback(self, interaction: discord.Interaction, select: Select):
-        # --- IDs JÁ CONFIGURADOS! ---
         ID_CARGO_STAFF = 1380957727748263966
-
         mapa_categorias = {
-            "compra": 1386744264037503159,
-            "suporte": 1386749804394184815,
-            "reportar_bug": 1386749987920285806,
-            "denuncia": 1386749871142473820
+            "compra": 1386744693659799603,
+            "suporte": 1386764302828048494,
+            "reportar_bug": 1386772360820166706,
+            "denuncia": 1386772324488974456
         }
 
         option_value = select.values[0]
@@ -74,15 +110,16 @@ class TicketView(View):
 
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
-            cargo_staff: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, view_channel=True),
+            cargo_staff: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True, view_channel=True)
         }
 
         nome_canal = f"ticket-{option_label.lower().replace(' ', '-')}-{user.name}"
         ticket_channel = await guild.create_text_channel(name=nome_canal, category=categoria, overwrites=overwrites)
         
         embed_ticket = discord.Embed(title=f"Ticket de {option_label} Aberto!", description=f"Olá {user.mention}, obrigado por nos contatar. \n\nPor favor, descreva seu problema ou dúvida em detalhes. Um membro da equipe <@&{ID_CARGO_STAFF}> virá te ajudar em breve.", color=discord.Color.green())
-        await ticket_channel.send(embed=embed_ticket)
+        
+        await ticket_channel.send(embed=embed_ticket, view=CloseTicketView())
         
         await interaction.response.send_message(f"✅ Seu ticket foi criado com sucesso! Acesse: {ticket_channel.mention}", ephemeral=True)
 
@@ -97,11 +134,9 @@ async def configurar_tickets(interaction: discord.Interaction):
     embed = discord.Embed(title="🎫 Central de Atendimento - Altura RP City", description="**ESCOLHA O TIPO DE TICKET QUE DESEJA ABRIR NO MENU ABAIXO**\n\nÉ importante lembrar-se de abrir tickets apenas quando necessário. Nossa equipe está aqui para ajudar e fornecer suporte sempre que você precisar.", color=discord.Color.blue())
     embed.set_thumbnail(url=client.user.display_avatar.url)
     embed.set_footer(text="© Altura RolePlay / SEASON 1 ✓")
-    view = TicketView()
-    await interaction.channel.send(embed=embed, view=view)
+    await interaction.channel.send(embed=embed, view=TicketView())
     await interaction.response.send_message("Painel de tickets configurado!", ephemeral=True)
 
-# ... (O resto dos seus comandos, como /ping, /ip, etc., continuam aqui) ...
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong! 🏓")
@@ -264,6 +299,7 @@ async def aviso_error(interaction: discord.Interaction, error: app_commands.AppC
 @client.event
 async def on_ready():
     client.add_view(TicketView())
+    client.add_view(CloseTicketView())
     await tree.sync()
     print("Comandos de barra sincronizados.")
     activity = discord.Game(name="na cidade do Altura RP City")
@@ -288,7 +324,7 @@ async def on_message(message):
             user = User(id=user_id, xp=0, level=1)
             db.add(user)
         user.xp += xp_ganho
-        xp_necessario = (5 * (user.level ** 2)) + (50 * level) + 100
+        xp_necessario = (5 * (user.level ** 2)) + (50 * user.level) + 100
         if user.xp >= xp_necessario:
             user.level += 1
             user.xp -= xp_necessario
@@ -372,7 +408,7 @@ async def on_member_remove(member):
     goodbye_channel = discord.utils.get(member.guild.text_channels, name=goodbye_channel_name)
     if goodbye_channel:
         guild = member.guild
-        member_count = guild.member_count # The count is already updated
+        member_count = guild.member_count
         db = SessionLocal()
         try:
             setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
@@ -385,7 +421,7 @@ async def on_member_remove(member):
 
         description_text = goodbye_text.format(member=member, server=guild, member_name=member.name, server_name=guild.name, server_member_count=member_count)
 
-        embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(255, 99, 71)) # Cor vermelha/laranja para saída
+        embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(255, 99, 71))
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
         if member.avatar:
@@ -398,6 +434,8 @@ async def on_member_remove(member):
         await goodbye_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de despedida '{goodbye_channel_name}' não encontrado no servidor '{member.guild.name}'.")
+
+
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
@@ -405,4 +443,4 @@ if __name__ == "__main__":
     setup_database()
     start_web_server()
     client.run(TOKEN)
-        
+    
