@@ -1,4 +1,4 @@
-# SEU ARQUIVO main.py COMPLETO E ATUALIZADO
+# SEU ARQUIVO main.py FINAL E COMPLETO
 
 import discord
 from discord import app_commands
@@ -6,11 +6,9 @@ import os
 from dotenv import load_dotenv
 from samp_client.client import SampClient
 
-# Carrega as variáveis de ambiente
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-# Configuração das Intents
 intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
@@ -21,12 +19,10 @@ tree = app_commands.CommandTree(client)
 
 # --- SEÇÃO DE COMANDOS ---
 
-# COMANDO /ping
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong! 🏓")
 
-# COMANDO /ip
 @tree.command(name="ip", description="Mostra o endereço de IP para se conectar ao servidor SAMP.")
 async def ip(interaction: discord.Interaction):
     embed_ip = discord.Embed(title="🚀 Conecte-se ao Altura RolePlay City!", description="Use o IP abaixo para entrar na melhor cidade do SAMP!", color=discord.Color.blue())
@@ -34,7 +30,6 @@ async def ip(interaction: discord.Interaction):
     embed_ip.set_footer(text="Clique no IP para copiar. Te vemos lá!")
     await interaction.response.send_message(embed=embed_ip)
 
-# COMANDO /regras ATUALIZADO
 @tree.command(name="regras", description="Mostra as regras principais do servidor.")
 async def regras(interaction: discord.Interaction):
     regras_texto = """
@@ -62,7 +57,6 @@ async def regras(interaction: discord.Interaction):
     embed_regras = discord.Embed(title="📜 Regras do Discord - Altura RP City", description=regras_texto, color=discord.Color.orange())
     await interaction.response.send_message(embed=embed_regras)
 
-# COMANDO /redes_sociais ATUALIZADO
 @tree.command(name="redes_sociais", description="Mostra as redes sociais oficiais do servidor.")
 async def redes_sociais(interaction: discord.Interaction):
     embed_redes = discord.Embed(title="📱 Nossas Redes Sociais", description="Siga-nos para ficar por dentro de tudo!", color=discord.Color.purple())
@@ -71,12 +65,10 @@ async def redes_sociais(interaction: discord.Interaction):
     embed_redes.add_field(name="Instagram", value="[Clique aqui para acessar](https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==)", inline=False)
     await interaction.response.send_message(embed=embed_redes)
 
-# COMANDO /status
 @tree.command(name="status", description="Verifica o status do servidor SAMP.")
 async def status(interaction: discord.Interaction):
     IP_DO_SERVIDOR = "179.127.16.157"
     PORTA_DO_SERVIDOR = 29015
-
     try:
         with SampClient(address=IP_DO_SERVIDOR, port=PORTA_DO_SERVIDOR) as samp_client:
             info = samp_client.get_server_info()
@@ -87,39 +79,45 @@ async def status(interaction: discord.Interaction):
     except Exception as e:
         print(f"Erro ao checar status do servidor: {e}")
         embed_status = discord.Embed(title=f"❌ Status do Servidor: OFFLINE", description="Não foi possível conectar ao servidor. Tente novamente mais tarde.", color=discord.Color.red())
-    
     await interaction.response.send_message(embed=embed_status)
 
-# COMANDO /sugestao ATUALIZADO
 @tree.command(name="sugestao", description="Envie uma sugestão para a equipe.")
 async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
-    ID_DO_CANAL_SUGESTOES = 1386752647767265541 # ID JÁ CONFIGURADO
-
+    ID_DO_CANAL_SUGESTOES = 1386752647767265541
     canal_sugestoes = client.get_channel(ID_DO_CANAL_SUGESTOES)
     if not canal_sugestoes:
         await interaction.response.send_message("Erro: Canal de sugestões não configurado.", ephemeral=True)
         return
-
     embed_sugestao = discord.Embed(title="💡 Nova Sugestão", description=texto_da_sugestao, color=discord.Color.yellow())
     embed_sugestao.set_author(name=f"Sugestão de: {interaction.user.name}", icon_url=interaction.user.display_avatar.url)
-
     mensagem_enviada = await canal_sugestoes.send(embed=embed_sugestao)
     await mensagem_enviada.add_reaction("👍")
     await mensagem_enviada.add_reaction("👎")
-
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso para o canal de sugestões!", ephemeral=True)
-
 
 # --- SEÇÃO DE EVENTOS ---
 
 @client.event
 async def on_ready():
+    """Função chamada quando o bot se conecta com sucesso."""
     await tree.sync()
     print("Comandos de barra sincronizados.")
+    
+    # --- ESCOLHA O STATUS DO SEU BOT AQUI ---
+    # Descomente (apague o #) da opção que você mais gostar. Deixe as outras comentadas.
+    
+    # Opção 1: Jogando um jogo (esta está ativa por padrão)
+    activity = discord.Game(name="Altura RP | /ip")
+    
+
+    # Define a presença do bot
+    await client.change_presence(status=discord.Status.online, activity=activity)
+    
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
+    print(f'Status do bot definido para: {activity.name}')
 
-# ... (A função on_member_join continua aqui, igual a antes) ...
+# ... (on_member_join e on_member_update continuam aqui, iguais) ...
 @client.event
 async def on_member_join(member):
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
@@ -152,19 +150,16 @@ async def on_member_join(member):
     else:
         print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
 
-
-# ... (A função on_member_update continua aqui, igual a antes) ...
 @client.event
 async def on_member_update(before, after):
-    ID_DO_CARGO_GATILHO = 123456789012345678 # Lembre-se de configurar estes IDs
-    ID_DO_CANAL_ANUNCIO = 123456789012345678
-    ID_DO_CARGO_PING    = 123456789012345678
+    ID_DO_CARGO_GATILHO = 1387535159120629770 # Lembre-se de configurar estes IDs
+    ID_DO_CANAL_ANUNCIO = 1390048422815338596
+    ID_DO_CARGO_PING    = 1380958005331230742
 
     cargo_gatilho = after.guild.get_role(ID_DO_CARGO_GATILHO)
     canal_anuncio = after.guild.get_channel(ID_DO_CANAL_ANUNCIO)
 
     if not cargo_gatilho or not canal_anuncio:
-        # print("ERRO: Cargo de gatilho ou Canal de anúncio não encontrado. Verifique os IDs.")
         return
 
     if cargo_gatilho not in before.roles and cargo_gatilho in after.roles:
@@ -175,7 +170,6 @@ async def on_member_update(before, after):
         mensagem_ping = f"Atenção, <@&{ID_DO_CARGO_PING}>!"
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
-
 
 # --- INICIA O BOT ---
 client.run(TOKEN)
