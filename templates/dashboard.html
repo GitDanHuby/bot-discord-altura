@@ -1,1 +1,23 @@
-
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - Altura RP City</title>
+     <style>
+        body { background-color: #121212; color: #fff; font-family: 'Roboto', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .container { max-width: 600px; }
+        .logout-btn { color: #e74c3c; text-decoration: none; margin-top: 20px; display: inline-block; }
+        img { border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bem-vindo(a) ao seu Painel!</h1>
+        <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar">
+        <h2>Olá, {{ user.username }}!</h2>
+        <p>Esta é a sua área logada. No futuro, aqui estarão as configurações do bot.</p>
+        <a href="/logout" class="logout-btn">Sair (Logout)</a>
+    </div>
+</body>
+</html>
