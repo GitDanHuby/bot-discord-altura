@@ -304,7 +304,7 @@ async def on_message_delete(message):
     if message.author.bot:
         return
 
-    ID_CANAL_LOGS_DELETADOS = 1390740921787879536 # <<<<<< COLOQUE AQUI O ID DO CANAL DE LOGS
+    ID_CANAL_LOGS_DELETADOS = 1386759472126623874 # <<<<<< COLOQUE AQUI O ID DO CANAL DE LOGS
 
     canal_logs = client.get_channel(ID_CANAL_LOGS_DELETADOS)
     if not canal_logs:
