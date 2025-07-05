@@ -1,5 +1,5 @@
 # =================================================================================
-# ARQUIVO main.py COMPLETO - COM SISTEMA DE NÍVEIS
+# ARQUIVO main.py COMPLETO - COM SISTEMA DE MODERAÇÃO (/aviso)
 # =================================================================================
 
 # --- Seção de Imports ---
@@ -9,9 +9,10 @@ import os
 from dotenv import load_dotenv
 from samp_client.client import SampClient
 from web_server import start_web_server
-from database_setup import setup_database, SessionLocal, User, Setting # Importa User
+from database_setup import setup_database, SessionLocal, User, Setting
 import random
 import time
+from datetime import datetime
 
 # --- Configuração Inicial ---
 load_dotenv()
@@ -21,19 +22,18 @@ intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
 intents.guilds = True
-intents.message_content = True # Habilita a intent que ativamos no portal
+intents.message_content = True
 
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-# Dicionário para controlar o cooldown de XP
 xp_cooldowns = {}
 
 # =================================================================================
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
 # =================================================================================
 
-# ... (Todos os seus comandos antigos: /ping, /ip, /regras, etc. continuam aqui, sem alterações) ...
+# ... (Todos os seus comandos antigos: /ping, /ip, /regras, etc. ficam aqui) ...
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong! 🏓")
@@ -110,41 +110,93 @@ async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
     await mensagem_enviada.add_reaction("👎")
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso para o canal de sugestões!", ephemeral=True)
 
-# NOVO COMANDO /rank
 @tree.command(name="rank", description="Mostra seu nível e XP no servidor.")
 async def rank(interaction: discord.Interaction, membro: discord.Member = None):
-    # Se o usuário não especificar um membro, ele mostra o próprio rank
     target_user = membro or interaction.user
-    
     db = SessionLocal()
     try:
         user_data = db.query(User).filter(User.id == target_user.id).first()
         if not user_data:
             await interaction.response.send_message(f"{target_user.name} ainda não tem XP. Comece a conversar!", ephemeral=True)
             return
-
         level = user_data.level
         xp = user_data.xp
         xp_para_proximo_level = (5 * (level ** 2)) + (50 * level) + 100
-        
         embed_rank = discord.Embed(title=f"🏆 Rank de {target_user.name}", color=target_user.color)
         embed_rank.set_thumbnail(url=target_user.display_avatar.url)
         embed_rank.add_field(name="Nível", value=f"**{level}**", inline=True)
         embed_rank.add_field(name="XP", value=f"**{xp} / {xp_para_proximo_level}**", inline=True)
-        
-        # Barra de progresso simples
         progresso = int((xp / xp_para_proximo_level) * 20)
         barra = "🟩" * progresso + "⬛" * (20 - progresso)
         embed_rank.add_field(name="Progresso", value=barra, inline=False)
-        
         await interaction.response.send_message(embed=embed_rank)
     finally:
         db.close()
+
+# --- NOVO COMANDO /aviso ---
+@tree.command(name="aviso", description="Envia um aviso para um membro e registra em um canal de logs.")
+@app_commands.checks.has_permissions(kick_members=True) # Só membros com permissão de "Expulsar Membros" podem usar
+async def aviso(interaction: discord.Interaction, membro: discord.Member, motivo: str):
+    ID_CANAL_LOGS = 123456789012345678 # <<<<<< COLOQUE AQUI O ID DO SEU CANAL DE LOGS DA STAFF
+
+    # Evita que um staff avise a si mesmo ou a outro bot
+    if membro == interaction.user:
+        await interaction.response.send_message("Você não pode avisar a si mesmo.", ephemeral=True)
+        return
+    if membro.bot:
+        await interaction.response.send_message("Você não pode avisar um bot.", ephemeral=True)
+        return
+
+    # Tenta enviar a DM para o membro
+    try:
+        embed_dm = discord.Embed(
+            title="🚨 Você Recebeu um Aviso!",
+            description=f"Você foi avisado no servidor **{interaction.guild.name}**.",
+            color=discord.Color.yellow()
+        )
+        embed_dm.add_field(name="Motivo do Aviso", value=motivo, inline=False)
+        embed_dm.set_footer(text=f"Aviso aplicado por: {interaction.user.name}")
+        await membro.send(embed=embed_dm)
+        dm_enviada = True
+    except discord.Forbidden:
+        # Acontece se o membro bloqueou DMs do servidor
+        dm_enviada = False
+
+    # Envia o log no canal da staff
+    canal_logs = client.get_channel(ID_CANAL_LOGS)
+    if canal_logs:
+        embed_log = discord.Embed(
+            title="📝 Log de Aviso",
+            color=discord.Color.orange(),
+            timestamp=datetime.now()
+        )
+        embed_log.add_field(name="Membro Avisado", value=membro.mention, inline=True)
+        embed_log.add_field(name="Aplicado por", value=interaction.user.mention, inline=True)
+        embed_log.add_field(name="Motivo", value=motivo, inline=False)
+        embed_log.set_footer(text=f"ID do Membro: {membro.id}")
+        await canal_logs.send(embed=embed_log)
+
+    # Envia a confirmação para o staff
+    confirmacao = f"✅ Aviso para {membro.mention} registrado com sucesso."
+    if not dm_enviada:
+        confirmacao += "\n⚠️ Não foi possível enviar a DM para o membro (provavelmente ele tem DMs desativadas)."
+    
+    await interaction.response.send_message(confirmacao, ephemeral=True)
+
+# Tratador de erro para o comando /aviso
+@aviso.error
+async def aviso_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message("❌ Você não tem permissão para usar este comando.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Ocorreu um erro inesperado.", ephemeral=True)
+        print(error)
 
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
 
+# ... (on_ready, on_message, on_member_join, on_member_update ficam aqui, exatamente como antes) ...
 @client.event
 async def on_ready():
     await tree.sync()
@@ -154,60 +206,40 @@ async def on_ready():
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
 
-# NOVO EVENTO on_message PARA DAR XP
 @client.event
 async def on_message(message):
-    # Ignora mensagens de bots e mensagens privadas
     if message.author.bot or not message.guild:
         return
-
     user_id = message.author.id
     current_time = time.time()
-
-    # Cooldown de 60 segundos para ganhar XP
     if user_id in xp_cooldowns and current_time - xp_cooldowns[user_id] < 60:
         return
-    
     xp_cooldowns[user_id] = current_time
     xp_ganho = random.randint(15, 25)
-
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.id == user_id).first()
-        # Se o usuário não existe no banco de dados, cria um novo registro
         if not user:
             user = User(id=user_id, xp=0, level=1)
             db.add(user)
-        
         user.xp += xp_ganho
-        
-        # Verifica se o usuário subiu de nível
         xp_necessario = (5 * (user.level ** 2)) + (50 * user.level) + 100
         if user.xp >= xp_necessario:
             user.level += 1
-            user.xp -= xp_necessario # Opcional: reseta o XP para o novo nível
-            
-            # Envia a mensagem de level up
-            level_up_embed = discord.Embed(
-                title="🎉 LEVEL UP! 🎉",
-                description=f"Parabéns, {message.author.mention}! Você alcançou o **Nível {user.level}**!",
-                color=discord.Color.magenta()
-            )
+            user.xp -= xp_necessario
+            level_up_embed = discord.Embed(title="🎉 LEVEL UP! 🎉", description=f"Parabéns, {message.author.mention}! Você alcançou o **Nível {user.level}**!", color=discord.Color.magenta())
             await message.channel.send(embed=level_up_embed)
-            
         db.commit()
     finally:
         db.close()
 
-# ... (on_member_join e on_member_update continuam aqui, iguais) ...
 @client.event
 async def on_member_join(member):
+    from database_setup import SessionLocal, Setting
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
-
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
-        
         db = SessionLocal()
         try:
             setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
@@ -217,9 +249,7 @@ async def on_member_join(member):
                 welcome_text = f"Seja muito bem-vindo(a), {{member.mention}}, ao {{server_name}}! Configure a mensagem de boas-vindas no dashboard."
         finally:
             db.close()
-
         description_text = welcome_text.format(member=member, server=guild, member_mention=member.mention, member_name=member.name, server_name=guild.name, server_member_count=member_count)
-        
         embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(70, 130, 180))
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
@@ -239,13 +269,10 @@ async def on_member_update(before, after):
     ID_DO_CARGO_GATILHO = 1387535159120629770
     ID_DO_CANAL_ANUNCIO = 1390048422815338596
     ID_DO_CARGO_PING    = 1380958005331230742
-
     cargo_gatilho = after.guild.get_role(ID_DO_CARGO_GATILHO)
     canal_anuncio = after.guild.get_channel(ID_DO_CANAL_ANUNCIO)
-
     if not cargo_gatilho or not canal_anuncio:
         return
-
     if cargo_gatilho not in before.roles and cargo_gatilho in after.roles:
         embed_parceria = discord.Embed(title="🤝 Nova Parceria Fechada!", description=f"Temos o prazer de anunciar uma nova parceria com o membro {after.mention}!", color=discord.Color.gold())
         if after.display_avatar:
