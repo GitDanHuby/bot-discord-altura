@@ -1,5 +1,5 @@
 # =================================================================================
-# ARQUIVO main.py DEFINITIVO - COM TUDO (INCLUINDO SISTEMA DE TICKET COMPLETO)
+# ARQUIVO main.py DEFINITIVO - COM CORREÇÃO FINAL DOS TICKETS
 # =================================================================================
 
 # --- Seção de Imports ---
@@ -20,10 +20,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
-intents.members = True
-intents.messages = True
-intents.guilds = True
-intents.message_content = True
+intents.members = True; intents.messages = True; intents.guilds = True; intents.message_content = True
 
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
@@ -37,7 +34,7 @@ class ConfirmCloseView(View):
         super().__init__(timeout=60)
         self.value = None
 
-    @button(label="Confirmar Fechamento", style=discord.ButtonStyle.danger, custom_id="confirm_close_final_v3")
+    @button(label="Confirmar Fechamento", style=discord.ButtonStyle.danger, custom_id="confirm_close_final_v4")
     async def confirm(self, interaction: discord.Interaction, button: Button):
         try:
             await interaction.response.send_message("✅ Ticket fechado. O canal será deletado em 5 segundos.", ephemeral=True)
@@ -48,7 +45,7 @@ class ConfirmCloseView(View):
         self.value = True
         self.stop()
 
-    @button(label="Cancelar", style=discord.ButtonStyle.secondary, custom_id="cancel_close_final_v3")
+    @button(label="Cancelar", style=discord.ButtonStyle.secondary, custom_id="cancel_close_final_v4")
     async def cancel(self, interaction: discord.Interaction, button: Button):
         await interaction.message.delete()
         await interaction.response.send_message("❌ Ação cancelada.", ephemeral=True)
@@ -59,7 +56,7 @@ class CloseTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @button(label="🔒 Fechar Ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket_button_final_v3")
+    @button(label="🔒 Fechar Ticket", style=discord.ButtonStyle.danger, custom_id="close_ticket_button_final_v4")
     async def close_ticket(self, interaction: discord.Interaction, button: Button):
         if not interaction.user.guild_permissions.manage_channels:
             await interaction.response.send_message("❌ Você não tem permissão para fechar este ticket.", ephemeral=True)
@@ -75,7 +72,7 @@ class TicketView(View):
         super().__init__(timeout=None)
 
     @discord.ui.select(
-        custom_id="ticket_menu_v3",
+        custom_id="ticket_menu_v4",
         placeholder="Selecione o tipo de ticket que deseja abrir...",
         min_values=1, max_values=1,
         options=[
@@ -86,6 +83,7 @@ class TicketView(View):
         ]
     )
     async def ticket_menu_callback(self, interaction: discord.Interaction, select: Select):
+        # --- VERIFIQUE E COLOQUE OS IDs CORRETOS DAS CATEGORIAS ("PASTINHAS") AQUI ---
         ID_CARGO_STAFF = 1380957727748263966
         mapa_categorias = {
             "compra": 1386744264037503159,
@@ -105,18 +103,29 @@ class TicketView(View):
         cargo_staff = guild.get_role(ID_CARGO_STAFF)
 
         if not categoria or not cargo_staff:
-            await interaction.response.send_message("Erro de configuração do bot. Contate um administrador.", ephemeral=True)
+            await interaction.response.send_message("Erro de configuração do bot (IDs). Contate um administrador.", ephemeral=True)
             return
 
+        # --- CORREÇÃO DE PERMISSÃO APLICADA AQUI ---
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, view_channel=True),
-            cargo_staff: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True, view_channel=True)
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
+            cargo_staff: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True),
+            client.user: discord.PermissionOverwrite(read_messages=True, send_messages=True, embed_links=True) # <-- LINHA NOVA E CRUCIAL
         }
 
         nome_canal = f"ticket-{option_label.lower().replace(' ', '-')}-{user.name}"
-        ticket_channel = await guild.create_text_channel(name=nome_canal, category=categoria, overwrites=overwrites)
         
+        try:
+            ticket_channel = await guild.create_text_channel(name=nome_canal, category=categoria, overwrites=overwrites)
+        except discord.Forbidden:
+            await interaction.response.send_message("❌ Erro de Permissão: O bot não tem permissão para criar canais nesta categoria.", ephemeral=True)
+            return
+        except Exception as e:
+            print(f"Erro inesperado ao criar canal: {e}")
+            await interaction.response.send_message("Ocorreu um erro ao criar o ticket.", ephemeral=True)
+            return
+
         embed_ticket = discord.Embed(title=f"Ticket de {option_label} Aberto!", description=f"Olá {user.mention}, obrigado por nos contatar. \n\nPor favor, descreva seu problema ou dúvida em detalhes. Um membro da equipe <@&{ID_CARGO_STAFF}> virá te ajudar em breve.", color=discord.Color.green())
         
         await ticket_channel.send(embed=embed_ticket, view=CloseTicketView())
@@ -128,6 +137,7 @@ class TicketView(View):
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
 # =================================================================================
 
+# ... (Todo o resto do seu código, comandos e eventos, continua aqui sem nenhuma alteração) ...
 @tree.command(name="configurar_tickets", description="Posta o painel de abertura de tickets neste canal.")
 @app_commands.checks.has_permissions(manage_guild=True)
 async def configurar_tickets(interaction: discord.Interaction):
@@ -366,7 +376,7 @@ async def on_member_join(member):
             embed.set_footer(text=footer_text)
         await welcome_channel.send(embed=embed)
     else:
-        print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
+       print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
 
 @client.event
 async def on_member_update(before, after):
@@ -443,4 +453,3 @@ if __name__ == "__main__":
     setup_database()
     start_web_server()
     client.run(TOKEN)
-    
