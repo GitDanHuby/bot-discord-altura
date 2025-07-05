@@ -102,10 +102,10 @@ class TicketView(View):
     async def ticket_menu_callback(self, interaction: discord.Interaction, select: Select):
         ID_CARGO_STAFF = 1380957727748263966
         mapa_categorias = {
-            "compra": 1386744693659799603,
-            "suporte": 1386764302828048494,
-            "reportar_bug": 1386772360820166706,
-            "denuncia": 1386772324488974456
+            "compra": 1386744264037503159,
+            "suporte": 1386749804394184815,
+            "reportar_bug": 1386749987920285806,
+            "denuncia": 1386749871142473820
         }
 
         option_value = select.values[0]
