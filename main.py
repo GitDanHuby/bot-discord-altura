@@ -1,5 +1,5 @@
 # =================================================================================
-# ARQUIVO main.py COMPLETO - VERSÃO FINAL CORRIGIDA
+# ARQUIVO main.py COMPLETO - COM SISTEMA DE NÍVEIS
 # =================================================================================
 
 # --- Seção de Imports ---
@@ -9,27 +9,35 @@ import os
 from dotenv import load_dotenv
 from samp_client.client import SampClient
 from web_server import start_web_server
-from database_setup import setup_database # <<<<<< IMPORT DA FUNÇÃO QUE FALTAVA
+from database_setup import setup_database, SessionLocal, User, Setting # Importa User
+import random
+import time
 
 # --- Configuração Inicial ---
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
-intents.members = True; intents.messages = True; intents.guilds = True
+intents.members = True
+intents.messages = True
+intents.guilds = True
+intents.message_content = True # Habilita a intent que ativamos no portal
 
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
+
+# Dicionário para controlar o cooldown de XP
+xp_cooldowns = {}
 
 # =================================================================================
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
 # =================================================================================
 
+# ... (Todos os seus comandos antigos: /ping, /ip, /regras, etc. continuam aqui, sem alterações) ...
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong! 🏓")
 
-# ... (Todos os outros comandos: /ip, /regras, /redes_sociais, /status, /sugestao ficam aqui, exatamente como antes) ...
 @tree.command(name="ip", description="Mostra o endereço de IP para se conectar ao servidor SAMP.")
 async def ip(interaction: discord.Interaction):
     embed_ip = discord.Embed(title="🚀 Conecte-se ao Altura RolePlay City!", description="Use o IP abaixo para entrar na melhor cidade do SAMP!", color=discord.Color.blue())
@@ -102,27 +110,98 @@ async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
     await mensagem_enviada.add_reaction("👎")
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso para o canal de sugestões!", ephemeral=True)
 
+# NOVO COMANDO /rank
+@tree.command(name="rank", description="Mostra seu nível e XP no servidor.")
+async def rank(interaction: discord.Interaction, membro: discord.Member = None):
+    # Se o usuário não especificar um membro, ele mostra o próprio rank
+    target_user = membro or interaction.user
+    
+    db = SessionLocal()
+    try:
+        user_data = db.query(User).filter(User.id == target_user.id).first()
+        if not user_data:
+            await interaction.response.send_message(f"{target_user.name} ainda não tem XP. Comece a conversar!", ephemeral=True)
+            return
+
+        level = user_data.level
+        xp = user_data.xp
+        xp_para_proximo_level = (5 * (level ** 2)) + (50 * level) + 100
+        
+        embed_rank = discord.Embed(title=f"🏆 Rank de {target_user.name}", color=target_user.color)
+        embed_rank.set_thumbnail(url=target_user.display_avatar.url)
+        embed_rank.add_field(name="Nível", value=f"**{level}**", inline=True)
+        embed_rank.add_field(name="XP", value=f"**{xp} / {xp_para_proximo_level}**", inline=True)
+        
+        # Barra de progresso simples
+        progresso = int((xp / xp_para_proximo_level) * 20)
+        barra = "🟩" * progresso + "⬛" * (20 - progresso)
+        embed_rank.add_field(name="Progresso", value=barra, inline=False)
+        
+        await interaction.response.send_message(embed=embed_rank)
+    finally:
+        db.close()
+
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
 
 @client.event
 async def on_ready():
-    """Função chamada quando o bot se conecta com sucesso."""
     await tree.sync()
     print("Comandos de barra sincronizados.")
-    
     activity = discord.Game(name="na cidade do Altura RP City")
     await client.change_presence(status=discord.Status.online, activity=activity)
-    
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
-    print(f'Status do bot definido para: {activity.name}')
 
+# NOVO EVENTO on_message PARA DAR XP
+@client.event
+async def on_message(message):
+    # Ignora mensagens de bots e mensagens privadas
+    if message.author.bot or not message.guild:
+        return
+
+    user_id = message.author.id
+    current_time = time.time()
+
+    # Cooldown de 60 segundos para ganhar XP
+    if user_id in xp_cooldowns and current_time - xp_cooldowns[user_id] < 60:
+        return
+    
+    xp_cooldowns[user_id] = current_time
+    xp_ganho = random.randint(15, 25)
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        # Se o usuário não existe no banco de dados, cria um novo registro
+        if not user:
+            user = User(id=user_id, xp=0, level=1)
+            db.add(user)
+        
+        user.xp += xp_ganho
+        
+        # Verifica se o usuário subiu de nível
+        xp_necessario = (5 * (user.level ** 2)) + (50 * user.level) + 100
+        if user.xp >= xp_necessario:
+            user.level += 1
+            user.xp -= xp_necessario # Opcional: reseta o XP para o novo nível
+            
+            # Envia a mensagem de level up
+            level_up_embed = discord.Embed(
+                title="🎉 LEVEL UP! 🎉",
+                description=f"Parabéns, {message.author.mention}! Você alcançou o **Nível {user.level}**!",
+                color=discord.Color.magenta()
+            )
+            await message.channel.send(embed=level_up_embed)
+            
+        db.commit()
+    finally:
+        db.close()
+
+# ... (on_member_join e on_member_update continuam aqui, iguais) ...
 @client.event
 async def on_member_join(member):
-    from database_setup import SessionLocal, Setting
-    
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
 
     if welcome_channel:
@@ -157,8 +236,6 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_update(before, after):
-    from database_setup import SessionLocal, Setting
-    
     ID_DO_CARGO_GATILHO = 1387535159120629770
     ID_DO_CANAL_ANUNCIO = 1390048422815338596
     ID_DO_CARGO_PING    = 1380958005331230742
@@ -178,11 +255,10 @@ async def on_member_update(before, after):
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
-
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
 if __name__ == "__main__":
-    setup_database() # CRIA A TABELA NO BANCO DE DADOS (A LINHA QUE FALTAVA!)
-    start_web_server() # Liga o site em segundo plano
-    client.run(TOKEN)  # Liga o bot e mantém ele rodando
+    setup_database()
+    start_web_server()
+    client.run(TOKEN)
