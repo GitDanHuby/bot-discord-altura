@@ -286,7 +286,7 @@ async def on_member_update(before, after):
 async def on_member_remove(member):
     from database_setup import SessionLocal, Setting
 
-    goodbye_channel_name = 'SEU-CANAL-DE-DESPEDIDA'  # <<<<<< ALTERE PARA O NOME DO SEU CANAL
+    goodbye_channel_name = '✋│ᴇxɪᴛ'  # <<<<<< ALTERE PARA O NOME DO SEU CANAL
     goodbye_channel = discord.utils.get(member.guild.text_channels, name=goodbye_channel_name)
 
     if goodbye_channel:
