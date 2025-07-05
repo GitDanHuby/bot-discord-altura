@@ -119,25 +119,44 @@ async def on_ready():
     print('Bot está online e pronto para uso.')
     print(f'Status do bot definido para: {activity.name}')
 
+# DENTRO DO main.py, SUBSTITUA APENAS A FUNÇÃO on_member_join
+
+# ... (todo o código antes de on_member_join permanece igual) ...
+
+# --- EVENTO DE ENTRADA DE MEMBRO (AGORA LENDO DO BANCO DE DADOS) ---
 @client.event
 async def on_member_join(member):
-    """Função de boas-vindas com a mensagem personalizada do Altura RP."""
+    from database_setup import SessionLocal, Setting # Importa as ferramentas do banco de dados aqui dentro
+
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
 
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
-        description_text = f"""
-👉 <@!{member.id}> 👋✨ Seja muito bem-vindo(a), ao Altura RolePlay City — onde a sua história começa nas alturas! 🚁🌆
-🛬 Você acaba de pousar na cidade mais viva e realista do SAMP! Aqui, cada escolha conta e o roleplay é levado a sério.
-👥 Agora somos **{member_count} membros** vivendo essa experiência com você! 🎉
-📝 **Antes de iniciar sua jornada:**
-📜 Leia atentamente as regras em <#1384229192933310585>
-📢 Fique de olho nos eventos e atualizações em <#1380958104228724789>
-🎮 **IP do Servidor:** `179.127.16.157:29015`
-💬 Em caso de dúvidas, fale com a equipe <@&1380957723159433326>
-💜 O Altura RolePlay agradece sua presença. Nos vemos nas ruas da cidade! 🚓🚶‍♂️🚕
-"""
+
+        # Conecta ao banco de dados para buscar a mensagem
+        db = SessionLocal()
+        try:
+            setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
+            # Se encontrar uma mensagem salva, usa ela. Se não, usa uma mensagem padrão.
+            if setting and setting.value:
+                welcome_text = setting.value
+            else:
+                welcome_text = f"Seja muito bem-vindo(a), {member.mention}, ao {guild.name}! Configure a mensagem de boas-vindas no dashboard."
+        finally:
+            db.close()
+
+        # Substitui as variáveis na mensagem
+        # Isso permite que você use {member.mention} e {server.member_count} na mensagem do dashboard
+        description_text = welcome_text.format(
+            member=member, 
+            server=guild, 
+            member_mention=member.mention, 
+            member_name=member.name, 
+            server_name=guild.name, 
+            server_member_count=member_count
+        )
+
         embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(70, 130, 180))
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
@@ -151,6 +170,8 @@ async def on_member_join(member):
         await welcome_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
+
+# ... (o resto do código, como on_member_update e a parte de iniciar o bot, permanece igual) ...
 
 @client.event
 async def on_member_update(before, after):
