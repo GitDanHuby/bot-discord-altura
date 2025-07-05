@@ -3,3 +3,5 @@ python-dotenv
 samp-client
 Flask
 requests
+SQLAlchemy
+psycopg2-binary
