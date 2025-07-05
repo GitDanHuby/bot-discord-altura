@@ -298,34 +298,39 @@ async def on_member_update(before, after):
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
-# --- NOVO EVENTO on_message_delete ---
+# --- NOVO EVENTO on_message_delete (COM LAYOUT ATUALIZADO) ---
 @client.event
 async def on_message_delete(message):
-    # Ignora mensagens do próprio bot
     if message.author.bot:
         return
 
-    ID_CANAL_LOGS_DELETADOS = 1386759472126623874# <<<<<< COLOQUE AQUI O ID DO CANAL DE LOGS
+    ID_CANAL_LOGS_DELETADOS = 1390740921787879536 # <<<<<< COLOQUE AQUI O ID DO CANAL DE LOGS
 
     canal_logs = client.get_channel(ID_CANAL_LOGS_DELETADOS)
     if not canal_logs:
         return
 
-    # Se a mensagem estiver vazia (só uma imagem, por exemplo), o bot não faz nada.
-    if not message.content:
-        return
+    conteudo = message.content if message.content else "Nenhum texto na mensagem (provavelmente uma imagem ou embed)."
 
+    # Novo layout do Embed
     embed = discord.Embed(
-        title="🗑️ Mensagem Deletada",
+        description="**📝 Mensagem de texto deletada**",
         color=discord.Color.dark_red(),
         timestamp=datetime.now()
     )
-    embed.add_field(name="Autor", value=message.author.mention, inline=True)
-    embed.add_field(name="Canal", value=message.channel.mention, inline=True)
-    embed.add_field(name="Conteúdo da Mensagem", value=f"```\n{message.content}\n```", inline=False)
-    embed.set_footer(text=f"ID do Autor: {message.author.id}")
+    # Define o autor do embed como o autor da mensagem deletada
+    embed.set_author(name=f"{message.author.name}", icon_url=message.author.display_avatar.url)
+    
+    # Adiciona campos para Canal e Mensagem
+    embed.add_field(name="Canal de texto:", value=message.channel.mention, inline=False)
+    embed.add_field(name="Mensagem:", value=f"```{conteudo}```", inline=False)
+    
+    # Adiciona o ID do usuário no rodapé para referência
+    embed.set_footer(text=f"ID do Usuário: {message.author.id}")
     
     await canal_logs.send(embed=embed)
+
+
 
 @client.event
 async def on_member_remove(member):
