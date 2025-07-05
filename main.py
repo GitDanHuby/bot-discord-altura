@@ -103,21 +103,14 @@ async def on_ready():
     await tree.sync()
     print("Comandos de barra sincronizados.")
     
-    # --- ESCOLHA O STATUS DO SEU BOT AQUI ---
-    # Descomente (apague o #) da opção que você mais gostar. Deixe as outras comentadas.
-    
-    # Opção 1: Jogando um jogo (esta está ativa por padrão)
-    activity = discord.Game(name="Altura RP | /ip")
-    
-
-    # Define a presença do bot
+    # --- STATUS PERSONALIZADO DO BOT ---
+    activity = discord.Game(name="na cidade do Altura RP City")
     await client.change_presence(status=discord.Status.online, activity=activity)
     
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
     print(f'Status do bot definido para: {activity.name}')
 
-# ... (on_member_join e on_member_update continuam aqui, iguais) ...
 @client.event
 async def on_member_join(member):
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
@@ -152,7 +145,11 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_update(before, after):
-    ID_DO_CARGO_GATILHO = 1387535159120629770 # Lembre-se de configurar estes IDs
+    """
+    Esta função é chamada sempre que um membro é atualizado (ex: recebe um cargo).
+    """
+    # --- CONFIGURAÇÃO DE PARCERIA (IDs JÁ CONFIGURADOS!) ---
+    ID_DO_CARGO_GATILHO = 1387535159120629770
     ID_DO_CANAL_ANUNCIO = 1390048422815338596
     ID_DO_CARGO_PING    = 1380958005331230742
 
