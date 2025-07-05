@@ -137,7 +137,7 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
 @tree.command(name="aviso", description="Envia um aviso para um membro e registra em um canal de logs.")
 @app_commands.checks.has_permissions(kick_members=True) # Só membros com permissão de "Expulsar Membros" podem usar
 async def aviso(interaction: discord.Interaction, membro: discord.Member, motivo: str):
-    ID_CANAL_LOGS = 123456789012345678 # <<<<<< COLOQUE AQUI O ID DO SEU CANAL DE LOGS DA STAFF
+    ID_CANAL_LOGS = 1390917419748299002 # <<<<<< COLOQUE AQUI O ID DO SEU CANAL DE LOGS DA STAFF
 
     # Evita que um staff avise a si mesmo ou a outro bot
     if membro == interaction.user:
