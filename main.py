@@ -298,6 +298,35 @@ async def on_member_update(before, after):
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
+# --- NOVO EVENTO on_message_delete ---
+@client.event
+async def on_message_delete(message):
+    # Ignora mensagens do próprio bot
+    if message.author.bot:
+        return
+
+    ID_CANAL_LOGS_DELETADOS = 1386759472126623874# <<<<<< COLOQUE AQUI O ID DO CANAL DE LOGS
+
+    canal_logs = client.get_channel(ID_CANAL_LOGS_DELETADOS)
+    if not canal_logs:
+        return
+
+    # Se a mensagem estiver vazia (só uma imagem, por exemplo), o bot não faz nada.
+    if not message.content:
+        return
+
+    embed = discord.Embed(
+        title="🗑️ Mensagem Deletada",
+        color=discord.Color.dark_red(),
+        timestamp=datetime.now()
+    )
+    embed.add_field(name="Autor", value=message.author.mention, inline=True)
+    embed.add_field(name="Canal", value=message.channel.mention, inline=True)
+    embed.add_field(name="Conteúdo da Mensagem", value=f"```\n{message.content}\n```", inline=False)
+    embed.set_footer(text=f"ID do Autor: {message.author.id}")
+    
+    await canal_logs.send(embed=embed)
+
 @client.event
 async def on_member_remove(member):
     from database_setup import SessionLocal, Setting
