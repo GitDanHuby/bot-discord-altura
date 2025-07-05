@@ -282,6 +282,42 @@ async def on_member_update(before, after):
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
+@client.event
+async def on_member_remove(member):
+    from database_setup import SessionLocal, Setting
+
+    goodbye_channel_name = 'SEU-CANAL-DE-DESPEDIDA'  # <<<<<< ALTERE PARA O NOME DO SEU CANAL
+    goodbye_channel = discord.utils.get(member.guild.text_channels, name=goodbye_channel_name)
+
+    if goodbye_channel:
+        guild = member.guild
+        member_count = guild.member_count - 1 # Decrementa a contagem já que o membro saiu
+
+        db = SessionLocal()
+        try:
+            setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
+            if setting and setting.value:
+                goodbye_text = setting.value
+            else:
+                goodbye_text = f"**{member.name}** deixou o servidor. Sentiremos sua falta! 👋"
+        finally:
+            db.close()
+
+        description_text = goodbye_text.format(member=member, server=guild, member_name=member.name, server_name=guild.name, server_member_count=member_count)
+
+        embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(255, 99, 71)) # Cor vermelha/laranja para saída
+        if client.user.avatar:
+            embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
+        if member.avatar:
+            embed.set_thumbnail(url=member.avatar.url)
+        footer_text = "© Todos os direitos reservados do Altura RP City"
+        if client.user.avatar:
+            embed.set_footer(text=footer_text, icon_url=client.user.avatar.url)
+        else:
+            embed.set_footer(text=footer_text)
+        await goodbye_channel.send(embed=embed)
+    else:
+        print(f"Aviso: Canal de despedida '{goodbye_channel_name}' não encontrado no servidor '{member.guild.name}'.")
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
