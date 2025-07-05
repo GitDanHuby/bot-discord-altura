@@ -1,11 +1,16 @@
-# SEU ARQUIVO main.py FINAL E CORRIGIDO
+# =================================================================================
+# ARQUIVO main.py COMPLETO - BOT DO DISCORD + SITE DE STATUS
+# =================================================================================
 
+# --- Seção de Imports ---
 import discord
 from discord import app_commands
 import os
 from dotenv import load_dotenv
 from samp_client.client import SampClient
+from web_server import start_web_server # Importa a função para ligar o site
 
+# --- Configuração Inicial ---
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
@@ -17,7 +22,9 @@ intents.guilds = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-# --- SEÇÃO DE COMANDOS ---
+# =================================================================================
+# --- SEÇÃO DE COMANDOS DE BARRA (/) ---
+# =================================================================================
 
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
@@ -50,7 +57,7 @@ async def regras(interaction: discord.Interaction):
     **15. Recrutamento só nos canais apropriados.**
     **16. Proibido transmitir outros servidores SA-MP em call.**
     **17. Você é responsável pela vinculação correta da sua conta.**
-
+    
     > Ao permanecer no servidor, você aceita todas as regras.
     *📅 Atualizado em: 16/06/2025*
     """
@@ -60,9 +67,9 @@ async def regras(interaction: discord.Interaction):
 @tree.command(name="redes_sociais", description="Mostra as redes sociais oficiais do servidor.")
 async def redes_sociais(interaction: discord.Interaction):
     embed_redes = discord.Embed(title="📱 Nossas Redes Sociais", description="Siga-nos para ficar por dentro de tudo!", color=discord.Color.purple())
-    embed_redes.add_field(name="YouTube", value="https://youtube.com/@snow_pr25", inline=False)
-    embed_redes.add_field(name="TikTok", value="https://www.tiktok.com/@snow_pr37?_t=8xl9kFMFyDQ&_r=1", inline=False)
-    embed_redes.add_field(name="Instagram", value="https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==", inline=False)
+    embed_redes.add_field(name="YouTube", value="[Clique aqui para acessar](https://youtube.com/@snow_pr25)", inline=False)
+    embed_redes.add_field(name="TikTok", value="[Clique aqui para acessar](https://www.tiktok.com/@snow_pr37?_t=8xl9kFMFyDQ&_r=1)", inline=False)
+    embed_redes.add_field(name="Instagram", value="[Clique aqui para acessar](https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==)", inline=False)
     await interaction.response.send_message(embed=embed_redes)
 
 @tree.command(name="status", description="Verifica o status do servidor SAMP.")
@@ -95,30 +102,31 @@ async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
     await mensagem_enviada.add_reaction("👎")
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso para o canal de sugestões!", ephemeral=True)
 
-# --- SEÇÃO DE EVENTOS ---
+# =================================================================================
+# --- SEÇÃO DE EVENTOS DO DISCORD ---
+# =================================================================================
 
 @client.event
 async def on_ready():
     """Função chamada quando o bot se conecta com sucesso."""
     await tree.sync()
     print("Comandos de barra sincronizados.")
-
-    # --- STATUS PERSONALIZADO DO BOT ---
+    
     activity = discord.Game(name="na cidade do Altura RP City")
     await client.change_presence(status=discord.Status.online, activity=activity)
-
+    
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
     print(f'Status do bot definido para: {activity.name}')
 
 @client.event
 async def on_member_join(member):
+    """Função de boas-vindas com a mensagem personalizada do Altura RP."""
     welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
 
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
-        # --- CORREÇÃO AQUI! Menciona o membro que entrou ---
         description_text = f"""
 👉 <@!{member.id}> 👋✨ Seja muito bem-vindo(a), ao Altura RolePlay City — onde a sua história começa nas alturas! 🚁🌆
 🛬 Você acaba de pousar na cidade mais viva e realista do SAMP! Aqui, cada escolha conta e o roleplay é levado a sério.
@@ -146,10 +154,7 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_update(before, after):
-    """
-    Esta função é chamada sempre que um membro é atualizado (ex: recebe um cargo).
-    """
-    # --- CONFIGURAÇÃO DE PARCERIA (IDs JÁ CONFIGURADOS!) ---
+    """Esta função é chamada sempre que um membro é atualizado (ex: recebe um cargo)."""
     ID_DO_CARGO_GATILHO = 1387535159120629770
     ID_DO_CANAL_ANUNCIO = 1390048422815338596
     ID_DO_CARGO_PING    = 1380958005331230742
@@ -169,5 +174,9 @@ async def on_member_update(before, after):
         print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
-# --- INICIA O BOT ---
-client.run(TOKEN)
+# =================================================================================
+# --- INICIA O SITE E O BOT ---
+# =================================================================================
+if __name__ == "__main__":
+    start_web_server() # Liga o site em segundo plano
+    client.run(TOKEN)  # Liga o bot e mantém ele rodando
