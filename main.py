@@ -133,6 +133,22 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
     finally:
         db.close()
 
+@tree.command(name="set_goodbye_message", description="Define a mensagem de despedida do servidor (Staff only).")
+@app_commands.checks.has_permissions(manage_guild=True)
+async def set_goodbye_message(interaction: discord.Interaction, message: str):
+    from database_setup import SessionLocal, Setting
+    db = SessionLocal()
+    try:
+        setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
+        if setting:
+            setting.value = message
+        else:
+            new_setting = Setting(key='goodbye_message', value=message)
+            db.add(new_setting)
+        db.commit()
+        await interaction.response.send_message("✅ Mensagem de despedida definida com sucesso!", ephemeral=True)
+    finally:
+        db.close()
 # --- NOVO COMANDO /aviso ---
 @tree.command(name="aviso", description="Envia um aviso para um membro e registra em um canal de logs.")
 @app_commands.checks.has_permissions(kick_members=True) # Só membros com permissão de "Expulsar Membros" podem usar
