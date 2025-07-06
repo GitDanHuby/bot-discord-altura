@@ -296,6 +296,50 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
     finally:
         db.close()
 
+# NOVO COMANDO /leaderboard
+@tree.command(name="leaderboard", description="Mostra os membros com mais XP no servidor.")
+async def leaderboard(interaction: discord.Interaction):
+    await interaction.response.defer() # Adia a resposta, pois a busca no DB pode demorar um pouco
+
+    db = SessionLocal()
+    try:
+        # Pega os 10 usuários com mais XP, em ordem decrescente
+        top_users = db.query(User).order_by(User.xp.desc()).limit(10).all()
+
+        embed = discord.Embed(
+            title="🏆 Ranking de Atividade do Servidor",
+            description="Os membros mais ativos do Altura RP City!",
+            color=discord.Color.gold()
+        )
+
+        if not top_users:
+            embed.description = "Ainda não há ninguém no ranking. Comece a conversar!"
+        else:
+            # Cria a lista de texto para o ranking
+            leaderboard_text = ""
+            for i, user_data in enumerate(top_users):
+                try:
+                    # Tenta encontrar o membro no servidor pelo ID
+                    member = await interaction.guild.fetch_member(user_data.id)
+                    member_name = member.display_name
+                except discord.NotFound:
+                    # Se o membro não for encontrado (saiu do servidor), mostra o ID
+                    member_name = f"Membro Desconhecido ({user_data.id})"
+                
+                # Monta a linha do ranking
+                leaderboard_text += f"**{i+1}.** {member_name} - **Nível {user_data.level}** ({user_data.xp} XP)\n"
+            
+            embed.description = leaderboard_text
+
+    except Exception as e:
+        print(f"Erro ao buscar o leaderboard: {e}")
+        embed = discord.Embed(title="❌ Erro", description="Não foi possível buscar o ranking no momento.", color=discord.Color.red())
+    finally:
+        db.close()
+
+    # Usa followup.send() porque já adiamos a resposta
+    await interaction.followup.send(embed=embed)
+
 @tree.command(name="set_goodbye_message", description="Define a mensagem de despedida do servidor (Staff only).")
 @app_commands.checks.has_permissions(manage_guild=True)
 async def set_goodbye_message(interaction: discord.Interaction, message: str):
