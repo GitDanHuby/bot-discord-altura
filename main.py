@@ -402,15 +402,15 @@ async def leave(interaction: discord.Interaction):
     await interaction.guild.voice_client.disconnect()
     await interaction.response.send_message("👋 Desconectado do canal de voz.")
 
-# NOVO COMANDO /play
+# COMANDO /play ATUALIZADO E CORRIGIDO
 @tree.command(name="play", description="Toca uma música do YouTube no seu canal de voz.")
 async def play(interaction: discord.Interaction, busca: str):
-    # Garante que o usuário esteja em um canal de voz
+    # 1. Garante que o usuário esteja em um canal de voz
     if not interaction.user.voice:
         await interaction.response.send_message("❌ Você precisa estar em um canal de voz para usar este comando.", ephemeral=True)
         return
 
-    # Conecta ao canal de voz se não estiver conectado
+    # 2. Conecta ao canal de voz se não estiver conectado
     voice_client = interaction.guild.voice_client
     if not voice_client:
         channel = interaction.user.voice.channel
@@ -420,7 +420,7 @@ async def play(interaction: discord.Interaction, busca: str):
             await interaction.response.send_message(f"❌ Erro ao conectar ao canal de voz: {e}", ephemeral=True)
             return
             
-    # Responde imediatamente para evitar o erro "Interaction Failed"
+    # Responde imediatamente para o Discord não achar que o bot travou
     await interaction.response.send_message(f"🔎 Procurando por: `{busca}`...")
 
     # Configurações do yt-dlp e FFmpeg
