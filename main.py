@@ -374,6 +374,32 @@ async def anunciar(interaction: discord.Interaction, titulo: str, mensagem: str,
     except Exception as e:
         await interaction.response.send_message(f"❌ Ocorreu um erro ao enviar o anúncio: {e}", ephemeral=True)
 
+# --- NOVOS COMANDOS DE MÚSICA ---
+
+@tree.command(name="join", description="Faz o bot entrar no seu canal de voz.")
+async def join(interaction: discord.Interaction):
+    if not interaction.user.voice:
+        await interaction.response.send_message("❌ Você não está em um canal de voz!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+    try:
+        await channel.connect()
+        await interaction.response.send_message(f"✅ Conectado ao canal de voz: **{channel.name}**")
+    except discord.ClientException:
+        await interaction.response.send_message("❌ O bot já está em um canal de voz.", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"Ocorreu um erro ao tentar conectar: {e}", ephemeral=True)
+
+
+@tree.command(name="leave", description="Faz o bot sair do canal de voz.")
+async def leave(interaction: discord.Interaction):
+    if not interaction.guild.voice_client:
+        await interaction.response.send_message("❌ O bot não está em nenhum canal de voz.", ephemeral=True)
+        return
+
+    await interaction.guild.voice_client.disconnect()
+    await interaction.response.send_message("👋 Desconectado do canal de voz.")
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
