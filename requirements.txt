@@ -6,4 +6,4 @@ requests
 SQLAlchemy
 psycopg2-binary
 PyNaCl
-yt-dlp
+yt-dlp @ git+https://github.com/yt-dlp/yt-dlp.git
