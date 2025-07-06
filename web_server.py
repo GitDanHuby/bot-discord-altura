@@ -2,7 +2,6 @@ from flask import Flask, render_template, redirect, request, session, url_for
 from threading import Thread
 import os
 import requests
-# Importa as ferramentas do nosso novo arquivo de banco de dados
 from database_setup import SessionLocal, Setting
 
 app = Flask(__name__, template_folder='templates')
@@ -10,7 +9,6 @@ app.secret_key = os.urandom(24)
 
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
-# A variável RAILWAY_PUBLIC_DOMAIN é fornecida automaticamente pela Railway
 REDIRECT_URI = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN', '')}/callback"
 API_BASE_URL = 'https://discord.com/api/v10'
 
@@ -50,23 +48,36 @@ def dashboard():
     try:
         # Se o formulário for enviado (método POST)
         if request.method == 'POST':
-            new_message = request.form['welcome_message']
-            setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
+            action = request.form.get('action')
+
+            # Salva a mensagem de boas-vindas
+            if action == 'save_welcome':
+                key = 'welcome_message'
+                value = request.form['welcome_message']
+            # Salva a mensagem de despedida
+            elif action == 'save_goodbye':
+                key = 'goodbye_message'
+                value = request.form['goodbye_message']
+
+            setting = db.query(Setting).filter(Setting.key == key).first()
             if setting:
-                setting.value = new_message
+                setting.value = value
             else:
-                setting = Setting(key='welcome_message', value=new_message)
+                setting = Setting(key=key, value=value)
                 db.add(setting)
             db.commit()
 
-        # Pega a mensagem atual do banco de dados para exibir
-        current_setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
-        current_message = current_setting.value if current_setting else "Mensagem padrão de boas-vindas!"
+        # Pega as mensagens atuais do banco de dados para exibir
+        welcome_setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
+        goodbye_setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
+
+        current_welcome = welcome_setting.value if welcome_setting else "Sua mensagem de boas-vindas aqui..."
+        current_goodbye = goodbye_setting.value if goodbye_setting else "Sua mensagem de despedida aqui..."
 
     finally:
         db.close()
 
-    return render_template('dashboard.html', user=user_info, current_welcome_message=current_message)
+    return render_template('dashboard.html', user=user_info, current_welcome_message=current_welcome, current_goodbye_message=current_goodbye)
 
 @app.route('/logout')
 def logout():
