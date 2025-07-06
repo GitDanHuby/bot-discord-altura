@@ -565,29 +565,46 @@ async def on_ready():
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
 
+# DENTRO DO main.py, SUBSTITUA APENAS ESTA FUNÇÃO
 @client.event
 async def on_message(message):
     if message.author.bot or not message.guild:
         return
-    user_id = message.author.id
-    current_time = time.time()
-    if user_id in xp_cooldowns and current_time - xp_cooldowns[user_id] < 60:
-        return
-    xp_cooldowns[user_id] = current_time
-    xp_ganho = random.randint(15, 25)
+
+    from database_setup import SessionLocal, User, Setting
+
     db = SessionLocal()
     try:
+        # --- VERIFICAÇÃO DO SISTEMA DE XP ---
+        xp_setting = db.query(Setting).filter(Setting.key == 'xp_system_enabled').first()
+        # Se a configuração não existir ou estiver como 'false', não faz nada.
+        if xp_setting and xp_setting.value == 'false':
+            return # Para a execução da função aqui
+        # ------------------------------------
+
+        user_id = message.author.id
+        current_time = time.time()
+
+        if user_id in xp_cooldowns and current_time - xp_cooldowns.get(user_id, 0) < 60:
+            return
+
+        xp_cooldowns[user_id] = current_time
+        xp_ganho = random.randint(15, 25)
+
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             user = User(id=user_id, xp=0, level=1)
             db.add(user)
+
         user.xp += xp_ganho
         xp_necessario = (5 * (user.level ** 2)) + (50 * user.level) + 100
+
         if user.xp >= xp_necessario:
             user.level += 1
             user.xp -= xp_necessario
             level_up_embed = discord.Embed(title="🎉 LEVEL UP! 🎉", description=f"Parabéns, {message.author.mention}! Você alcançou o **Nível {user.level}**!", color=discord.Color.magenta())
             await message.channel.send(embed=level_up_embed)
+
         db.commit()
     finally:
         db.close()
