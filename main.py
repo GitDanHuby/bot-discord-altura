@@ -378,7 +378,50 @@ async def anunciar(interaction: discord.Interaction, titulo: str, mensagem: str,
 # --- NOVOS COMANDOS DE MÚSICA ---
 
 @tree.command(name="join", description="Faz o bot entrar no seu canal de voz.")
-async def join(interaction: discord.Interaction):
+async def join(interaction: discord.Inte# COMANDO /play COM MELHORIA DE ERRO
+@tree.command(name="play", description="Toca uma música do YouTube no seu canal de voz.")
+async def play(interaction: discord.Interaction, busca: str):
+    if not interaction.user.voice:
+        await interaction.response.send_message("❌ Você precisa estar em um canal de voz para usar este comando.", ephemeral=True)
+        return
+
+    voice_client = interaction.guild.voice_client
+    if not voice_client:
+        channel = interaction.user.voice.channel
+        try:
+            voice_client = await channel.connect()
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Erro ao conectar ao canal de voz: {e}", ephemeral=True)
+            return
+            
+    await interaction.response.send_message(f"🔎 Procurando por: `{busca}`...")
+
+    YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'quiet': True}
+    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+
+    if voice_client.is_playing() or voice_client.is_paused():
+        voice_client.stop()
+
+    with YoutubeDL(YDL_OPTIONS) as ydl:
+        try:
+            info = ydl.extract_info(f"ytsearch:{busca}" if not busca.startswith("http") else busca, download=False)
+            
+            # Checagem para ver se algum vídeo foi encontrado
+            if 'entries' not in info or not info['entries']:
+                await interaction.followup.send("❌ Não encontrei nenhum resultado para essa busca.")
+                return
+
+            info = info['entries'][0]
+        except Exception as e:
+            print(f"Erro no YTDL: {e}")
+            await interaction.followup.send("❌ Ocorreu um erro ao procurar a música. Pode ser um vídeo com restrição de idade ou privado.")
+            return
+    
+    audio_url = info['url']
+    source = discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS)
+    voice_client.play(source)
+
+    await interaction.followup.send(f"▶️ Tocando agora: **{info['title']}**")raction):
     if not interaction.user.voice:
         await interaction.response.send_message("❌ Você não está em um canal de voz!", ephemeral=True)
         return
@@ -402,57 +445,7 @@ async def leave(interaction: discord.Interaction):
     await interaction.guild.voice_client.disconnect()
     await interaction.response.send_message("👋 Desconectado do canal de voz.")
 
-# COMANDO /play ATUALIZADO E CORRIGIDO
-@tree.command(name="play", description="Toca uma música do YouTube no seu canal de voz.")
-async def play(interaction: discord.Interaction, busca: str):
-    # 1. Garante que o usuário esteja em um canal de voz
-    if not interaction.user.voice:
-        await interaction.response.send_message("❌ Você precisa estar em um canal de voz para usar este comando.", ephemeral=True)
-        return
 
-    # 2. Conecta ao canal de voz se não estiver conectado
-    voice_client = interaction.guild.voice_client
-    if not voice_client:
-        channel = interaction.user.voice.channel
-        try:
-            voice_client = await channel.connect()
-        except Exception as e:
-            await interaction.response.send_message(f"❌ Erro ao conectar ao canal de voz: {e}", ephemeral=True)
-            return
-            
-    # Responde imediatamente para o Discord não achar que o bot travou
-    await interaction.response.send_message(f"🔎 Procurando por: `{busca}`...")
-
-    # Configurações do yt-dlp e FFmpeg
-    YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist':'True', 'quiet': True}
-    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-
-    # Para o que estiver tocando antes de começar a nova música
-    if voice_client.is_playing() or voice_client.is_paused():
-        voice_client.stop()
-
-    # Procura a música no YouTube
-    with YoutubeDL(YDL_OPTIONS) as ydl:
-        try:
-            # Procura por texto se não for um link, senão usa o link diretamente
-            info = ydl.extract_info(f"ytsearch:{busca}" if not busca.startswith("http") else busca, download=False)
-            if 'entries' in info:
-                # Pega o primeiro resultado da busca
-                info = info['entries'][0]
-        except Exception as e:
-            print(f"Erro no YTDL: {e}")
-            await interaction.followup.send("❌ Ocorreu um erro ao procurar a música. Verifique o link ou o nome.")
-            return
-    
-    # Pega a URL do áudio
-    audio_url = info['url']
-    
-    # Toca a música
-    source = discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS)
-    voice_client.play(source)
-
-    # Envia uma mensagem de confirmação usando "followup" pois já respondemos antes
-    await interaction.followup.send(f"▶️ Tocando agora: **{info['title']}**")
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
