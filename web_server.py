@@ -46,38 +46,43 @@ def dashboard():
 
     db = SessionLocal()
     try:
-        # Se o formulário for enviado (método POST)
         if request.method == 'POST':
             action = request.form.get('action')
+            key = None
 
-            # Salva a mensagem de boas-vindas
             if action == 'save_welcome':
                 key = 'welcome_message'
                 value = request.form['welcome_message']
-            # Salva a mensagem de despedida
             elif action == 'save_goodbye':
                 key = 'goodbye_message'
                 value = request.form['goodbye_message']
+            elif action == 'toggle_xp':
+                key = 'xp_system_enabled'
+                # Se o checkbox estiver marcado, o valor é 'on', senão, não vem nada.
+                value = 'true' if 'xp_system_enabled' in request.form else 'false'
 
-            setting = db.query(Setting).filter(Setting.key == key).first()
-            if setting:
-                setting.value = value
-            else:
-                setting = Setting(key=key, value=value)
-                db.add(setting)
-            db.commit()
+            if key:
+                setting = db.query(Setting).filter(Setting.key == key).first()
+                if setting:
+                    setting.value = value
+                else:
+                    setting = Setting(key=key, value=value)
+                    db.add(setting)
+                db.commit()
 
-        # Pega as mensagens atuais do banco de dados para exibir
+        # Pega as configurações atuais do banco de dados para exibir
         welcome_setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
         goodbye_setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
+        xp_setting = db.query(Setting).filter(Setting.key == 'xp_system_enabled').first()
 
         current_welcome = welcome_setting.value if welcome_setting else "Sua mensagem de boas-vindas aqui..."
         current_goodbye = goodbye_setting.value if goodbye_setting else "Sua mensagem de despedida aqui..."
+        xp_status = xp_setting.value == 'true' if xp_setting else True # Ligado por padrão
 
     finally:
         db.close()
 
-    return render_template('dashboard.html', user=user_info, current_welcome_message=current_welcome, current_goodbye_message=current_goodbye)
+    return render_template('dashboard.html', user=user_info, current_welcome_message=current_welcome, current_goodbye_message=current_goodbye, xp_system_status=xp_status)
 
 @app.route('/logout')
 def logout():
