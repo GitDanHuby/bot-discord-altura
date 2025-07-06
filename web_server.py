@@ -5,19 +5,37 @@ import requests
 from database_setup import SessionLocal, Setting
 
 app = Flask(__name__, template_folder='templates')
-app.secret_key = os.urandom(24)
+app.secret_key = os.urandom(24) # Essencial para a sessão de login
 
+# Carrega as variáveis de ambiente para o OAuth do Discord
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+# A URL de callback é dinâmica, baseada no domínio público da Railway
 REDIRECT_URI = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN', '')}/callback"
 API_BASE_URL = 'https://discord.com/api/v10'
 
+# Função para trocar o código de autorização por um token de acesso
 def token_exchange(code):
-    data = {'client_id': CLIENT_ID, 'client_secret': CLIENT_SECRET, 'grant_type': 'authorization_code', 'code': code, 'redirect_uri': REDIRECT_URI}
+    data = {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': REDIRECT_URI
+    }
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     r = requests.post(f"{API_BASE_URL}/oauth2/token", data=data, headers=headers)
     r.raise_for_status()
     return r.json()
+
+# Função para salvar ou atualizar uma configuração no banco de dados
+def update_setting(db, key, value):
+    setting = db.query(Setting).filter(Setting.key == key).first()
+    if setting:
+        setting.value = value
+    else:
+        new_setting = Setting(key=key, value=value)
+        db.add(new_setting)
 
 @app.route('/')
 def home():
@@ -25,10 +43,12 @@ def home():
 
 @app.route('/login')
 def login():
+    # Redireciona o usuário para a página de autorização do Discord
     return redirect(f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope=identify guilds")
 
 @app.route('/callback')
 def callback():
+    # O Discord redireciona de volta para cá com um código
     code = request.args.get('code')
     token_info = token_exchange(code)
     session['access_token'] = token_info['access_token']
@@ -41,48 +61,48 @@ def dashboard():
 
     headers = {'Authorization': f"Bearer {session['access_token']}"}
     user_info_res = requests.get(f"{API_BASE_URL}/users/@me", headers=headers)
-    user_info_res.raise_for_status()
+    if user_info_res.status_code != 200:
+        session.clear()
+        return redirect(url_for('login'))
     user_info = user_info_res.json()
 
     db = SessionLocal()
     try:
+        # Se o formulário for enviado (método POST)
         if request.method == 'POST':
-            action = request.form.get('action')
-            key = None
+            # Pega todos os dados do formulário de uma vez
+            form_data = request.form.to_dict()
+            
+            # Salva o estado do sistema de XP
+            xp_status = 'true' if 'xp_system_enabled' in form_data else 'false'
+            update_setting(db, 'xp_system_enabled', xp_status)
 
-            if action == 'save_welcome':
-                key = 'welcome_message'
-                value = request.form['welcome_message']
-            elif action == 'save_goodbye':
-                key = 'goodbye_message'
-                value = request.form['goodbye_message']
-            elif action == 'toggle_xp':
-                key = 'xp_system_enabled'
-                # Se o checkbox estiver marcado, o valor é 'on', senão, não vem nada.
-                value = 'true' if 'xp_system_enabled' in request.form else 'false'
+            # Lista de todas as outras chaves que queremos salvar
+            keys_to_save = [
+                'sugestao_channel_id', 'warn_log_channel_id', 'delete_log_channel_id',
+                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 'parceria_ping_role_id',
+                'welcome_message', 'goodbye_message'
+            ]
+            
+            # Itera e salva cada configuração
+            for key in keys_to_save:
+                if key in form_data:
+                    update_setting(db, key, form_data[key])
+            
+            db.commit()
 
-            if key:
-                setting = db.query(Setting).filter(Setting.key == key).first()
-                if setting:
-                    setting.value = value
-                else:
-                    setting = Setting(key=key, value=value)
-                    db.add(setting)
-                db.commit()
-
-        # Pega as configurações atuais do banco de dados para exibir
-        welcome_setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
-        goodbye_setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
-        xp_setting = db.query(Setting).filter(Setting.key == 'xp_system_enabled').first()
-
-        current_welcome = welcome_setting.value if welcome_setting else "Sua mensagem de boas-vindas aqui..."
-        current_goodbye = goodbye_setting.value if goodbye_setting else "Sua mensagem de despedida aqui..."
-        xp_status = xp_setting.value == 'true' if xp_setting else True # Ligado por padrão
+        # Pega todas as configurações atuais do banco de dados para exibir na página
+        all_settings = db.query(Setting).all()
+        settings_dict = {s.key: s.value for s in all_settings}
 
     finally:
         db.close()
 
-    return render_template('dashboard.html', user=user_info, current_welcome_message=current_welcome, current_goodbye_message=current_goodbye, xp_system_status=xp_status)
+    # Se a configuração do XP não existir, define como 'true' por padrão
+    if 'xp_system_enabled' not in settings_dict:
+        settings_dict['xp_system_enabled'] = 'true'
+
+    return render_template('dashboard.html', user=user_info, settings=settings_dict)
 
 @app.route('/logout')
 def logout():
