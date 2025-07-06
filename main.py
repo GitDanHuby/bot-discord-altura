@@ -159,7 +159,11 @@ class TicketView(View):
         
         await interaction.response.send_message(f"✅ Seu ticket foi criado com sucesso! Acesse: {ticket_channel.mention}", ephemeral=True)
 
-
+class DashboardView(discord.ui.View):
+    def __init__(self, url: str):
+        super().__init__()
+        # Adiciona o botão que é um link
+        self.add_item(discord.ui.Button(label="Acessar o Painel de Controle", style=discord.ButtonStyle.link, url=url, emoji="🚀"))
 # =================================================================================
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
 # =================================================================================
@@ -172,6 +176,26 @@ async def configurar_tickets(interaction: discord.Interaction):
     embed.set_footer(text="© Altura RolePlay / SEASON 1 ✓")
     await interaction.channel.send(embed=embed, view=TicketView())
     await interaction.response.send_message("Painel de tickets configurado!", ephemeral=True)
+
+@tree.command(name="dashboard", description="Envia o link para o painel de controle web do bot.")
+async def dashboard(interaction: discord.Interaction):
+    # Pega a URL pública do seu serviço na Railway automaticamente
+    dashboard_url = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN')}"
+    
+    # Verifica se a URL foi encontrada
+    if not os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+        await interaction.response.send_message("❌ A URL do dashboard não está configurada no ambiente.", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title="🚀 Painel de Controle do Altura RP City",
+        description="Clique no botão abaixo para acessar o dashboard web e configurar as funcionalidades do bot, como a mensagem de boas-vindas!",
+        color=discord.Color.blurple() # Cor padrão do Discord
+    )
+    
+    # Cria a view com o botão e envia
+    view = DashboardView(url=dashboard_url)
+    await interaction.response.send_message(embed=embed, view=view)
 
 @tree.command(name="ping", description="Testa se o bot está respondendo.")
 async def ping(interaction: discord.Interaction):
