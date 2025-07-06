@@ -454,6 +454,34 @@ async def play(interaction: discord.Interaction, busca: str):
 
     # Envia uma mensagem de confirmação usando "followup" pois já respondemos antes
     await interaction.followup.send(f"▶️ Tocando agora: **{info['title']}**")
+
+@tree.command(name="pause", description="Pausa a música que está tocando.")
+async def pause(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    if voice_client and voice_client.is_playing():
+        voice_client.pause()
+        await interaction.response.send_message("⏸️ Música pausada.")
+    else:
+        await interaction.response.send_message("❌ Não há nenhuma música tocando para pausar.", ephemeral=True)
+
+@tree.command(name="resume", description="Continua a música que foi pausada.")
+async def resume(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    if voice_client and voice_client.is_paused():
+        voice_client.resume()
+        await interaction.response.send_message("▶️ Retomando a música.")
+    else:
+        await interaction.response.send_message("❌ A música não está pausada.", ephemeral=True)
+
+@tree.command(name="stop", description="Para a música e desconecta o bot do canal de voz.")
+async def stop(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    if voice_client and voice_client.is_connected():
+        voice_client.stop()
+        await voice_client.disconnect()
+        await interaction.response.send_message("⏹️ Música parada e bot desconectado.")
+    else:
+        await interaction.response.send_message("❌ O bot não está tocando nada.", ephemeral=True)
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
