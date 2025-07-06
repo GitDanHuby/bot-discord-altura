@@ -5,3 +5,5 @@ Flask
 requests
 SQLAlchemy
 psycopg2-binary
+PyNaCl
+yt-dlp
