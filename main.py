@@ -32,6 +32,16 @@ tree = app_commands.CommandTree(client)
 xp_cooldowns = {}
 music_queues = {}
 
+# --- FUNÇÃO AUXILIAR PARA PEGAR CONFIGURAÇÕES DO DB ---
+def get_setting(key):
+    db = SessionLocal()
+    try:
+        setting = db.query(Setting).filter(Setting.key == key).first()
+        # Retorna o valor se a configuração existir, senão retorna None
+        return setting.value if setting and setting.value else None
+    finally:
+        db.close()
+
 # --- LÓGICA E CLASSES PARA O SISTEMA DE TICKETS ---
 
 ID_CANAL_LOGS_TICKETS = 1386744831266521231 # <<< COLOQUE AQUI O ID DO SEU CANAL #logs-ticket
@@ -297,17 +307,23 @@ async def status(interaction: discord.Interaction):
 
 @tree.command(name="sugestao", description="Envie uma sugestão para a equipe.")
 async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
-    ID_DO_CANAL_SUGESTOES = 1386752647767265541
-    canal_sugestoes = client.get_channel(ID_DO_CANAL_SUGESTOES)
-    if not canal_sugestoes:
-        await interaction.response.send_message("Erro: Canal de sugestões não configurado.", ephemeral=True)
+    # Busca o ID do canal no banco de dados
+    id_canal_str = get_setting('sugestao_channel_id')
+    if not id_canal_str:
+        await interaction.response.send_message("❌ O canal de sugestões não foi configurado no dashboard.", ephemeral=True)
         return
+    
+    canal_sugestoes = client.get_channel(int(id_canal_str))
+    if not canal_sugestoes:
+        await interaction.response.send_message("❌ O ID do canal de sugestões no dashboard é inválido.", ephemeral=True)
+        return
+
     embed_sugestao = discord.Embed(title="💡 Nova Sugestão", description=texto_da_sugestao, color=discord.Color.yellow())
     embed_sugestao.set_author(name=f"Sugestão de: {interaction.user.name}", icon_url=interaction.user.display_avatar.url)
     mensagem_enviada = await canal_sugestoes.send(embed=embed_sugestao)
     await mensagem_enviada.add_reaction("👍")
     await mensagem_enviada.add_reaction("👎")
-    await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso para o canal de sugestões!", ephemeral=True)
+    await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso!", ephemeral=True)
 
 @tree.command(name="rank", description="Mostra seu nível e XP no servidor.")
 async def rank(interaction: discord.Interaction, membro: discord.Member = None):
@@ -395,7 +411,17 @@ async def set_goodbye_message(interaction: discord.Interaction, message: str):
 @tree.command(name="aviso", description="Envia um aviso para um membro e registra em um canal de logs.")
 @app_commands.checks.has_permissions(kick_members=True)
 async def aviso(interaction: discord.Interaction, membro: discord.Member, motivo: str):
-    ID_CANAL_LOGS = 1390917419748299002
+    # Busca o ID do canal de logs no banco de dados
+    id_canal_logs_str = get_setting('warn_log_channel_id')
+    if not id_canal_logs_str:
+        await interaction.response.send_message("❌ O canal de logs de avisos não foi configurado no dashboard.", ephemeral=True)
+        return
+
+    canal_logs = client.get_channel(int(id_canal_logs_str))
+    if not canal_logs:
+        await interaction.response.send_message("❌ O ID do canal de logs de avisos no dashboard é inválido.", ephemeral=True)
+        return
+    
     if membro == interaction.user:
         await interaction.response.send_message("Você não pode avisar a si mesmo.", ephemeral=True)
         return
@@ -406,21 +432,21 @@ async def aviso(interaction: discord.Interaction, membro: discord.Member, motivo
         embed_dm = discord.Embed(title="🚨 Você Recebeu um Aviso!", description=f"Você foi avisado no servidor **{interaction.guild.name}**.", color=discord.Color.yellow())
         embed_dm.add_field(name="Motivo do Aviso", value=motivo, inline=False)
         embed_dm.set_footer(text=f"Aviso aplicado por: {interaction.user.name}")
-        await membro.send(embed=dm)
+        await membro.send(embed=embed_dm)
         dm_enviada = True
     except discord.Forbidden:
         dm_enviada = False
-    canal_logs = client.get_channel(ID_CANAL_LOGS)
-    if canal_logs:
-        embed_log = discord.Embed(title="📝 Log de Aviso", color=discord.Color.orange(), timestamp=datetime.now())
-        embed_log.add_field(name="Membro Avisado", value=membro.mention, inline=True)
-        embed_log.add_field(name="Aplicado por", value=interaction.user.mention, inline=True)
-        embed_log.add_field(name="Motivo", value=motivo, inline=False)
-        embed_log.set_footer(text=f"ID do Membro: {membro.id}")
-        await canal_logs.send(embed=embed_log)
+    
+    embed_log = discord.Embed(title="📝 Log de Aviso", color=discord.Color.orange(), timestamp=datetime.now())
+    embed_log.add_field(name="Membro Avisado", value=membro.mention, inline=True)
+    embed_log.add_field(name="Aplicado por", value=interaction.user.mention, inline=True)
+    embed_log.add_field(name="Motivo", value=motivo, inline=False)
+    embed_log.set_footer(text=f"ID do Membro: {membro.id}")
+    await canal_logs.send(embed=embed_log)
+
     confirmacao = f"✅ Aviso para {membro.mention} registrado com sucesso."
     if not dm_enviada:
-        confirmacao += "\n⚠️ Não foi possível enviar a DM para o membro (provavelmente ele tem DMs desativadas)."
+        confirmacao += "\n⚠️ Não foi possível enviar a DM para o membro."
     await interaction.response.send_message(confirmacao, ephemeral=True)
 
 @aviso.error
@@ -615,26 +641,23 @@ async def on_message(message):
     if message.author.bot or not message.guild:
         return
 
-    from database_setup import SessionLocal, User, Setting
+    # Verifica se o sistema de XP está ativado no banco de dados
+    xp_enabled_str = get_setting('xp_system_enabled')
+    # Se a configuração for 'false', a função para aqui e não dá XP.
+    if xp_enabled_str == 'false':
+        return 
 
+    user_id = message.author.id
+    current_time = time.time()
+
+    if user_id in xp_cooldowns and current_time - xp_cooldowns.get(user_id, 0) < 60:
+        return
+
+    xp_cooldowns[user_id] = current_time
+    xp_ganho = random.randint(15, 25)
+    
     db = SessionLocal()
     try:
-        # --- VERIFICAÇÃO DO SISTEMA DE XP ---
-        xp_setting = db.query(Setting).filter(Setting.key == 'xp_system_enabled').first()
-        # Se a configuração não existir ou estiver como 'false', não faz nada.
-        if xp_setting and xp_setting.value == 'false':
-            return # Para a execução da função aqui
-        # ------------------------------------
-
-        user_id = message.author.id
-        current_time = time.time()
-
-        if user_id in xp_cooldowns and current_time - xp_cooldowns.get(user_id, 0) < 60:
-            return
-
-        xp_cooldowns[user_id] = current_time
-        xp_ganho = random.randint(15, 25)
-
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             user = User(id=user_id, xp=0, level=1)
@@ -648,7 +671,7 @@ async def on_message(message):
             user.xp -= xp_necessario
             level_up_embed = discord.Embed(title="🎉 LEVEL UP! 🎉", description=f"Parabéns, {message.author.mention}! Você alcançou o **Nível {user.level}**!", color=discord.Color.magenta())
             await message.channel.send(embed=level_up_embed)
-
+        
         db.commit()
     finally:
         db.close()
@@ -689,30 +712,43 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_update(before, after):
-    ID_DO_CARGO_GATILHO = 1387535159120629770
-    ID_DO_CANAL_ANUNCIO = 1390048422815338596
-    ID_DO_CARGO_PING    = 1380958005331230742
-    cargo_gatilho = after.guild.get_role(ID_DO_CARGO_GATILHO)
-    canal_anuncio = after.guild.get_channel(ID_DO_CANAL_ANUNCIO)
+    # Busca todos os IDs do sistema de parceria no banco de dados
+    id_cargo_gatilho_str = get_setting('parceria_gatilho_role_id')
+    id_canal_anuncio_str = get_setting('parceria_anuncio_channel_id')
+    id_cargo_ping_str = get_setting('parceria_ping_role_id')
+
+    # Se algum ID não estiver configurado no dashboard, a função não faz nada
+    if not all([id_cargo_gatilho_str, id_canal_anuncio_str, id_cargo_ping_str]):
+        return 
+
+    cargo_gatilho = after.guild.get_role(int(id_cargo_gatilho_str))
+    canal_anuncio = after.guild.get_channel(int(id_canal_anuncio_str))
+    
     if not cargo_gatilho or not canal_anuncio:
         return
+
     if cargo_gatilho not in before.roles and cargo_gatilho in after.roles:
         embed_parceria = discord.Embed(title="🤝 Nova Parceria Fechada!", description=f"Temos o prazer de anunciar uma nova parceria com o membro {after.mention}!", color=discord.Color.gold())
         if after.display_avatar:
             embed_parceria.set_thumbnail(url=after.display_avatar.url)
         embed_parceria.set_footer(text=f"Membro desde: {after.joined_at.strftime('%d/%m/%Y') if after.joined_at else 'Data indisponível'}")
-        mensagem_ping = f"Atenção, <@&{ID_DO_CARGO_PING}>!"
-        print(f"Anunciando nova parceria com {after.name} no canal {canal_anuncio.name}.")
+        mensagem_ping = f"Atenção, <@&{id_cargo_ping_str}>!"
         await canal_anuncio.send(content=mensagem_ping, embed=embed_parceria)
 
 @client.event
 async def on_message_delete(message):
     if message.author.bot:
         return
-    ID_CANAL_LOGS_DELETADOS = 1386759472126623874
-    canal_logs = client.get_channel(ID_CANAL_LOGS_DELETADOS)
+
+    # Busca o ID do canal de logs no banco de dados
+    id_canal_logs_str = get_setting('delete_log_channel_id')
+    if not id_canal_logs_str:
+        return
+
+    canal_logs = client.get_channel(int(id_canal_logs_str))
     if not canal_logs:
         return
+
     conteudo = message.content if message.content else "Nenhum texto na mensagem (provavelmente uma imagem ou embed)."
     embed = discord.Embed(description="**📝 Mensagem de texto deletada**", color=discord.Color.dark_red(), timestamp=datetime.now())
     embed.set_author(name=f"{message.author.name}", icon_url=message.author.display_avatar.url)
