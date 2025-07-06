@@ -616,16 +616,24 @@ async def on_message_delete(message):
     embed.set_footer(text=f"ID do Usuário: {message.author.id}")
     await canal_logs.send(embed=embed)
 
+# DENTRO DO main.py, SUBSTITUA APENAS ESTA FUNÇÃO
 @client.event
 async def on_member_remove(member):
-    goodbye_channel_name = '✋│ᴇxɪᴛ'
+    from database_setup import SessionLocal, Setting
+
+    # Pega o canal de despedida pelo nome
+    goodbye_channel_name = '✋│ᴇxɪᴛ' # Você pode mudar isso se quiser
     goodbye_channel = discord.utils.get(member.guild.text_channels, name=goodbye_channel_name)
+
     if goodbye_channel:
         guild = member.guild
-        member_count = guild.member_count
+        member_count = guild.member_count # O Discord já atualizou a contagem
+
+        # Conecta ao banco de dados para buscar a mensagem
         db = SessionLocal()
         try:
             setting = db.query(Setting).filter(Setting.key == 'goodbye_message').first()
+            # Se encontrar uma mensagem salva, usa ela. Se não, usa uma padrão.
             if setting and setting.value:
                 goodbye_text = setting.value
             else:
@@ -633,9 +641,16 @@ async def on_member_remove(member):
         finally:
             db.close()
 
-        description_text = goodbye_text.format(member=member, server=guild, member_name=member.name, server_name=guild.name, server_member_count=member_count)
+        # Substitui as variáveis na mensagem
+        description_text = goodbye_text.format(
+            member=member, 
+            server=guild, 
+            member_name=member.name, 
+            server_name=guild.name, 
+            server_member_count=member_count
+        )
 
-        embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(255, 99, 71))
+        embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(255, 99, 71)) # Cor vermelha/laranja
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
         if member.avatar:
@@ -648,8 +663,6 @@ async def on_member_remove(member):
         await goodbye_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de despedida '{goodbye_channel_name}' não encontrado no servidor '{member.guild.name}'.")
-
-
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
