@@ -326,6 +326,53 @@ async def aviso_error(interaction: discord.Interaction, error: app_commands.AppC
         await interaction.response.send_message("Ocorreu um erro inesperado.", ephemeral=True)
         print(error)
 
+# --- NOVO COMANDO /anunciar ---
+@tree.command(name="anunciar", description="Cria um anúncio formatado em um canal específico.")
+@app_commands.checks.has_permissions(manage_guild=True) # Só quem pode gerenciar o servidor pode usar
+@app_commands.choices(ping=[ # Define as opções para o ping
+    app_commands.Choice(name="Everyone", value="everyone"),
+    app_commands.Choice(name="Here", value="here"),
+    app_commands.Choice(name="Nenhum", value="none")
+])
+async def anunciar(interaction: discord.Interaction, titulo: str, mensagem: str, ping: app_commands.Choice[str], imagem_url: str = None):
+    # ▼▼▼ COLOQUE O ID DO SEU CANAL #avisos AQUI DENTRO DAS ASPAS ▼▼▼
+    ID_CANAL_ANUNCIOS = "1380958104228724789" 
+
+    # Converte o ID para um número inteiro
+    try:
+        id_numerico = int(ID_CANAL_ANUNCIOS)
+        canal_anuncios = client.get_channel(id_numerico)
+    except (ValueError, TypeError):
+        canal_anuncios = None
+
+    if not canal_anuncios:
+        await interaction.response.send_message("❌ Canal de anúncios não configurado corretamente. Verifique o ID.", ephemeral=True)
+        return
+
+    # Define o texto do ping
+    ping_text = ""
+    if ping.value == "everyone":
+        ping_text = "@everyone"
+    elif ping.value == "here":
+        ping_text = "@here"
+
+    # Cria o embed do anúncio
+    embed = discord.Embed(
+        title=titulo,
+        description=mensagem,
+        color=discord.Color.blue(),
+        timestamp=datetime.now()
+    )
+    if imagem_url:
+        embed.set_thumbnail(url=imagem_url)
+    
+    embed.set_footer(text=f"Anúncio feito por: {interaction.user.name}")
+
+    try:
+        await canal_anuncios.send(content=ping_text if ping_text else None, embed=embed)
+        await interaction.response.send_message("✅ Anúncio enviado com sucesso!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Ocorreu um erro ao enviar o anúncio: {e}", ephemeral=True)
 
 # =================================================================================
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
