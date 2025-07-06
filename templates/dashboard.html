@@ -4,67 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - Altura RP City</title>
-     <style>
-        body { background-color: #121212; color: #fff; font-family: 'Roboto', sans-serif; padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        textarea { width: 100%; min-height: 120px; background-color: #2c2c2c; color: white; border: 1px solid #555; border-radius: 8px; padding: 10px; font-size: 1em; margin-top: 10px; }
-        button { background-color: #5865F2; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 1em; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;}
-        button:hover { background-color: #4752C4; }
-        .logout-btn { color: #e74c3c; text-decoration: none; margin-top: 20px; display: inline-block; }
-        img { border-radius: 50%; vertical-align: middle; margin-right: 10px;}
-        .header { margin-bottom: 30px; }
-        hr { border-color: #444; margin: 40px 0; }
-        /* Estilo para o interruptor */
+    <style>
+        body { background-color: #1e1e2e; color: #f2f2f2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; background-color: #282a36; padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.4); }
+        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #44475a; padding-bottom: 20px; margin-bottom: 20px; }
+        .header span { font-size: 1.2em; }
+        img.avatar { border-radius: 50%; vertical-align: middle; margin-right: 15px; }
+        .logout-btn { background-color: #ff5555; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; transition: background-color 0.3s; }
+        .logout-btn:hover { background-color: #ff7979; }
+        h1, h2, h3 { color: #50fa7b; }
+        textarea, input[type="text"] { width: 95%; background-color: #44475a; color: white; border: 1px solid #6272a4; border-radius: 5px; padding: 10px; font-size: 1em; margin-top: 5px; }
+        button { background-color: #bd93f9; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; margin-top: 20px;}
+        button:hover { background-color: #d6acff; }
+        hr { border-color: #44475a; margin: 30px 0; }
+        .module { background-color: #383a59; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .switch-container { display: flex; align-items: center; gap: 15px; }
+        /* Switch do XP */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2196F3; }
+        input:checked + .slider { background-color: #50fa7b; }
         input:checked + .slider:before { transform: translateX(26px); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=64" alt="Avatar">
-            <span>Logado como: **{{ user.username }}**</span>
-            <a href="/logout" class="logout-btn" style="float: right;">Sair</a>
+            <div>
+                <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=64" alt="Avatar" class="avatar">
+                <span>Logado como: **{{ user.username }}**</span>
+            </div>
+            <a href="/logout" class="logout-btn">Sair</a>
         </div>
-
+        
         <h1>Painel de Controle</h1>
-        <p>Configure as mensagens e módulos do seu bot.</p>
-
-        <hr>
-
+        <p>Configure os módulos e mensagens automáticas do seu bot.</p>
+        
         <form method="POST">
-            <h3>Sistema de Níveis (XP)</h3>
-            <label class="switch">
-              <input type="checkbox" name="xp_system_enabled" onchange="this.form.submit()" {{ 'checked' if xp_system_status else '' }}>
-              <span class="slider"></span>
-            </label>
-            <input type="hidden" name="action" value="toggle_xp">
+            <div class="module">
+                <h2>Módulos</h2>
+                <div class="switch-container">
+                    <span>Sistema de Níveis (XP):</span>
+                    <label class="switch">
+                      <input type="checkbox" name="xp_system_enabled" onchange="this.form.submit()" {{ 'checked' if settings.get('xp_system_enabled') == 'true' else '' }}>
+                      <span class="slider"></span>
+                    </label>
+                </div>
+                <input type="hidden" name="action" value="toggle_modules">
+            </div>
+
+            <div class="module">
+                <h2>Configuração de Canais e Cargos</h2>
+                <label for="sugestao_channel">ID do Canal de Sugestões:</label>
+                <input type="text" id="sugestao_channel" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+
+                <br><br>
+                <label for="warn_log_channel">ID do Canal de Logs de Avisos:</label>
+                <input type="text" id="warn_log_channel" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
+                
+                <br><br>
+                <label for="delete_log_channel">ID do Canal de Logs de Msgs Deletadas:</label>
+                <input type="text" id="delete_log_channel" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
+                
+                <br><br>
+                <h3>Sistema de Parceria</h3>
+                <label for="parceria_gatilho_role">ID do Cargo Gatilho de Parceria:</label>
+                <input type="text" id="parceria_gatilho_role" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
+                
+                <br><br>
+                <label for="parceria_anuncio_channel">ID do Canal de Anúncio de Parceria:</label>
+                <input type="text" id="parceria_anuncio_channel" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
+                
+                <br><br>
+                <label for="parceria_ping_role">ID do Cargo Ping de Parceria:</label>
+                <input type="text" id="parceria_ping_role" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
+            </div>
+
+            <div class="module">
+                <h2>Mensagens Customizáveis</h2>
+                <label for="welcome_message">Mensagem de Boas-Vindas:</label>
+                <p><small>Variáveis disponíveis: {member.mention}, {server.name}, {server_member_count}</small></p>
+                <textarea id="welcome_message" name="welcome_message">{{ settings.get('welcome_message', '') }}</textarea>
+                
+                <br><br>
+                <label for="goodbye_message">Mensagem de Despedida:</label>
+                <p><small>Variáveis disponíveis: {member.name}, {server.name}</small></p>
+                <textarea id="goodbye_message" name="goodbye_message">{{ settings.get('goodbye_message', '') }}</textarea>
+            </div>
+            
+            <button type="submit" name="action" value="save_all">Salvar Todas as Configurações</button>
         </form>
-
-        <hr>
-
-        <form method="POST">
-            <h3>Mensagem de Boas-Vindas</h3>
-            <p>Use {member.mention}, {server.name}, {server_member_count}, etc.</p>
-            <textarea name="welcome_message">{{ current_welcome_message }}</textarea>
-            <br>
-            <button type="submit" name="action" value="save_welcome">Salvar Mensagem de Boas-Vindas</button>
-        </form>
-
-        <hr>
-
-        <form method="POST">
-            <h3>Mensagem de Despedida</h3>
-            <p>Use {member.name}, {server.name}, etc.</p>
-            <textarea name="goodbye_message">{{ current_goodbye_message }}</textarea>
-            <br>
-            <button type="submit" name="action" value="save_goodbye">Salvar Mensagem de Despedida</button>
-        </form>
-
     </div>
 </body>
 </html>
