@@ -6,69 +6,79 @@
     <title>Painel - Altura RP City</title>
     <style>
         body { background-color: #1e1e2e; color: #f2f2f2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; line-height: 1.6; }
-        .container { max-width: 900px; margin: auto; }
+        .container { max-width: 900px; margin: auto; background-color: #282a36; padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.4); }
         .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #44475a; padding-bottom: 20px; margin-bottom: 20px; }
         img.avatar { border-radius: 50%; vertical-align: middle; margin-right: 15px; }
-        h1, h2 { color: #50fa7b; }
+        .logout-btn { background-color: #ff5555; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; }
+        h1, h2, h3 { color: #50fa7b; }
         textarea, input[type="text"] { width: 95%; background-color: #44475a; color: white; border: 1px solid #6272a4; border-radius: 5px; padding: 10px; font-size: 1em; margin-top: 5px; }
         button { background-color: #bd93f9; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 20px;}
-        .module { background-color: #282a36; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .notification { position: fixed; top: 20px; right: 20px; background-color: #50fa7b; color: #282a36; padding: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.5s; font-weight: bold; }
-        .notification.show { opacity: 1; }
+        hr { border-color: #44475a; margin: 30px 0; }
+        .module { background-color: #383a59; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .dashboard-layout { display: flex; flex-wrap: wrap; gap: 20px; }
+        .main-column { flex: 2; min-width: 300px; }
+        .side-column { flex: 1; min-width: 300px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div>
+                <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=64" alt="Avatar" class="avatar">
+                <span>Logado como: **{{ user.username }}**</span>
             </div>
+            <a href="/logout" class="logout-btn">Sair</a>
+        </div>
+        
         <h1>Painel de Controle</h1>
-        <form id="settings-form">
-            <div class="module">
-                <h3>Mensagens Customizáveis</h3>
-                <label for="welcome_message">Mensagem de Boas-Vindas:</label>
-                <textarea name="welcome_message">{{ settings.get('welcome_message', '') }}</textarea>
+        <p>Configure os módulos e mensagens automáticas do seu bot.</p>
+        
+        <form method="POST">
+            <div class="dashboard-layout">
+                <div class="main-column">
+                    <div class="module">
+                        <h2>Mensagens Customizáveis</h2>
+                        <label for="welcome_message">Mensagem de Boas-Vindas:</label>
+                        <textarea name="welcome_message">{{ settings.get('welcome_message', '') }}</textarea>
+                        <br><br>
+                        <label for="goodbye_message">Mensagem de Despedida:</label>
+                        <textarea name="goodbye_message">{{ settings.get('goodbye_message', '') }}</textarea>
+                    </div>
                 </div>
+                <div class="side-column">
+                    <div class="module">
+                        <h3>Módulos</h3>
+                        <input type="checkbox" name="xp_system_enabled" {{ 'checked' if settings.get('xp_system_enabled', 'true') == 'true' else '' }}>
+                        <label>Sistema de Níveis (XP)</label>
+                    </div>
+                    <div class="module">
+                        <h3>Configuração de IDs</h3>
+                        <label>Canal de Logs de Auditoria:</label>
+                        <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
+                        <label>Canal de Logs de Voz:</label>
+                        <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
+                        <label>Canal de Logs de Msgs Deletadas:</label>
+                        <input type="text" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
+                        <label>Canal de Logs de Avisos:</label>
+                        <input type="text" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
+                        <label>Canal de Sugestões:</label>
+                        <input type="text" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+                        <label>Canal de Logs de Tickets:</label>
+                        <input type="text" name="ticket_log_channel_id" value="{{ settings.get('ticket_log_channel_id', '') }}">
+                    </div>
+                </div>
+            </div>
+            <div class="module">
+                <h3>Sistema de Parceria</h3>
+                <label>ID do Cargo Gatilho:</label>
+                <input type="text" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
+                <label>ID do Canal de Anúncio:</label>
+                <input type="text" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
+                <label>ID do Cargo Ping:</label>
+                <input type="text" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
+            </div>
             <button type="submit">Salvar Todas as Configurações</button>
         </form>
     </div>
-
-    <script>
-        document.getElementById('settings-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const data = {};
-            formData.forEach((value, key) => { data[key] = value; });
-
-            fetch('/dashboard', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showNotification(result.message);
-                } else {
-                    alert('Ocorreu um erro ao salvar.');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Ocorreu um erro de conexão.');
-            });
-        });
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.innerText = message;
-            document.body.appendChild(notification);
-            setTimeout(() => { notification.classList.add('show'); }, 10);
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => { document.body.removeChild(notification); }, 500);
-            }, 3000);
-        }
-    </script>
 </body>
 </html>
