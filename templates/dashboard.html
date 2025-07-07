@@ -6,7 +6,7 @@
     <title>Painel - Altura RP City</title>
     <style>
         body { background-color: #1e1e2e; color: #f2f2f2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; line-height: 1.6; }
-        .container { max-width: 900px; margin: auto; background-color: #282a36; padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.4); }
+        .container { max-width: 1200px; margin: auto; }
         .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #44475a; padding-bottom: 20px; margin-bottom: 20px; }
         .header span { font-size: 1.2em; }
         img.avatar { border-radius: 50%; vertical-align: middle; margin-right: 15px; }
@@ -16,16 +16,22 @@
         textarea, input[type="text"] { width: 95%; background-color: #44475a; color: white; border: 1px solid #6272a4; border-radius: 5px; padding: 10px; font-size: 1em; margin-top: 5px; }
         button { background-color: #bd93f9; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; margin-top: 20px;}
         button:hover { background-color: #d6acff; }
-        hr { border-color: #44475a; margin: 30px 0; }
-        .module { background-color: #383a59; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .switch-container { display: flex; align-items: center; gap: 15px; }
-        /* Switch do XP */
-        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #50fa7b; }
-        input:checked + .slider:before { transform: translateX(26px); }
+        .module { background-color: #282a36; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.2);}
+        
+        /* --- NOVO LAYOUT EM COLUNAS --- */
+        .dashboard-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .main-column {
+            flex: 2; /* Ocupa 2/3 do espaço */
+            min-width: 300px;
+        }
+        .side-column {
+            flex: 1; /* Ocupa 1/3 do espaço */
+            min-width: 300px;
+        }
     </style>
 </head>
 <body>
@@ -42,59 +48,46 @@
         <p>Configure os módulos e mensagens automáticas do seu bot.</p>
         
         <form method="POST">
-            <div class="module">
-                <h2>Módulos</h2>
-                <div class="switch-container">
-                    <span>Sistema de Níveis (XP):</span>
-                    <label class="switch">
-                      <input type="checkbox" name="xp_system_enabled" onchange="this.form.submit()" {{ 'checked' if settings.get('xp_system_enabled') == 'true' else '' }}>
-                      <span class="slider"></span>
-                    </label>
+            <div class="dashboard-layout">
+                <div class="main-column">
+                    <div class="module">
+                        <h2>Mensagens Customizáveis</h2>
+                        <label for="welcome_message">Mensagem de Boas-Vindas:</label>
+                        <p><small>Variáveis: {member.mention}, {server.name}, {server_member_count}</small></p>
+                        <textarea id="welcome_message" name="welcome_message">{{ settings.get('welcome_message', '') }}</textarea>
+                        
+                        <br><br>
+                        <label for="goodbye_message">Mensagem de Despedida:</label>
+                        <p><small>Variáveis: {member.name}, {server.name}</small></p>
+                        <textarea id="goodbye_message" name="goodbye_message">{{ settings.get('goodbye_message', '') }}</textarea>
+                    </div>
                 </div>
-                <input type="hidden" name="action" value="toggle_modules">
-            </div>
 
-            <div class="module">
-                <h2>Configuração de Canais e Cargos</h2>
-                <label for="sugestao_channel">ID do Canal de Sugestões:</label>
-                <input type="text" id="sugestao_channel" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
-
-                <br><br>
-                <label for="warn_log_channel">ID do Canal de Logs de Avisos:</label>
-                <input type="text" id="warn_log_channel" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
-                
-                <br><br>
-                <label for="delete_log_channel">ID do Canal de Logs de Msgs Deletadas:</label>
-                <input type="text" id="delete_log_channel" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
-                
-                <br><br>
-                <label for="voice_log_channel">ID do Canal de Logs de Voz:</label> <input type="text" id="voice_log_channel" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}"> <br><br>
-                <br><br>
-                <label for="audit_log_channel">ID do Canal de Logs de Auditoria (Geral):</label>
-                <input type="text" id="audit_log_channel" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
-                <h3>Sistema de Parceria</h3>
-                <label for="parceria_gatilho_role">ID do Cargo Gatilho de Parceria:</label>
-                <input type="text" id="parceria_gatilho_role" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
-                
-                <br><br>
-                <label for="parceria_anuncio_channel">ID do Canal de Anúncio de Parceria:</label>
-                <input type="text" id="parceria_anuncio_channel" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
-                
-                <br><br>
-                <label for="parceria_ping_role">ID do Cargo Ping de Parceria:</label>
-                <input type="text" id="parceria_ping_role" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
-            </div>
-
-            <div class="module">
-                <h2>Mensagens Customizáveis</h2>
-                <label for="welcome_message">Mensagem de Boas-Vindas:</label>
-                <p><small>Variáveis disponíveis: {member.mention}, {server.name}, {server_member_count}</small></p>
-                <textarea id="welcome_message" name="welcome_message">{{ settings.get('welcome_message', '') }}</textarea>
-                
-                <br><br>
-                <label for="goodbye_message">Mensagem de Despedida:</label>
-                <p><small>Variáveis disponíveis: {member.name}, {server.name}</small></p>
-                <textarea id="goodbye_message" name="goodbye_message">{{ settings.get('goodbye_message', '') }}</textarea>
+                <div class="side-column">
+                    <div class="module">
+                        <h2>Módulos</h2>
+                        <label>Sistema de Níveis (XP):
+                            <input type="checkbox" name="xp_system_enabled" {{ 'checked' if settings.get('xp_system_enabled') != 'false' else '' }}>
+                        </label>
+                    </div>
+                    <div class="module">
+                        <h2>Configuração de IDs</h2>
+                        <label for="sugestao_channel">Canal de Sugestões:</label>
+                        <input type="text" id="sugestao_channel" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+                        <br>
+                        <label for="warn_log_channel">Canal de Logs de Avisos:</label>
+                        <input type="text" id="warn_log_channel" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
+                        <br>
+                        <label for="delete_log_channel">Canal de Logs de Msgs Deletadas:</label>
+                        <input type="text" id="delete_log_channel" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
+                        <br>
+                        <label for="voice_log_channel">Canal de Logs de Voz:</label>
+                        <input type="text" id="voice_log_channel" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
+                        <br>
+                        <label for="audit_log_channel">Canal de Logs de Auditoria:</label>
+                        <input type="text" id="audit_log_channel" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
+                    </div>
+                </div>
             </div>
             
             <button type="submit" name="action" value="save_all">Salvar Todas as Configurações</button>
