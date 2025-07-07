@@ -804,6 +804,57 @@ async def on_member_remove(member):
         await goodbye_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de despedida '{goodbye_channel_name}' não encontrado no servidor '{member.guild.name}'.")
+
+# --- NOVO EVENTO on_voice_state_update ---
+@client.event
+async def on_voice_state_update(member, before, after):
+    # Ignora bots para não poluir o log
+    if member.bot:
+        return
+
+    # Pega o ID do canal de logs do banco de dados
+    id_canal_logs_str = get_setting('voice_log_channel_id')
+    if not id_canal_logs_str:
+        return # Não faz nada se não estiver configurado
+
+    log_channel = client.get_channel(int(id_canal_logs_str))
+    if not log_channel:
+        return
+
+    # Caso 1: Membro entrou em um canal de voz
+    if not before.channel and after.channel:
+        embed = discord.Embed(
+            description=f"➡️ **{member.mention} entrou no canal de voz `{after.channel.name}`**",
+            color=discord.Color.green(),
+            timestamp=datetime.now()
+        )
+        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+        embed.set_footer(text=f"ID do Membro: {member.id}")
+        await log_channel.send(embed=embed)
+
+    # Caso 2: Membro saiu de um canal de voz
+    elif before.channel and not after.channel:
+        embed = discord.Embed(
+            description=f"⬅️ **{member.mention} saiu do canal de voz `{before.channel.name}`**",
+            color=discord.Color.red(),
+            timestamp=datetime.now()
+        )
+        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+        embed.set_footer(text=f"ID do Membro: {member.id}")
+        await log_channel.send(embed=embed)
+        
+    # Caso 3: Membro trocou de canal de voz
+    elif before.channel and after.channel and before.channel != after.channel:
+        embed = discord.Embed(
+            description=f"🔄 **{member.mention} trocou de canal de voz**",
+            color=discord.Color.blue(),
+            timestamp=datetime.now()
+        )
+        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+        embed.add_field(name="Saiu de", value=f"`{before.channel.name}`", inline=False)
+        embed.add_field(name="Entrou em", value=f"`{after.channel.name}`", inline=False)
+        embed.set_footer(text=f"ID do Membro: {member.id}")
+        await log_channel.send(embed=embed)
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
