@@ -54,8 +54,8 @@ def callback():
     session['access_token'] = token_info['access_token']
     return redirect(url_for('dashboard'))
 
-# DENTRO DE web_server.py, SUBSTITUA A FUNÇÃO INTEIRA ABAIXO
 
+# DENTRO DE web_server.py, SUBSTITUA A FUNÇÃO INTEIRA ABAIXO
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'access_token' not in session:
@@ -70,39 +70,25 @@ def dashboard():
 
     db = SessionLocal()
     try:
-        # Se o formulário for enviado (método POST)
+        # Se o formulário for enviado (método POST via JavaScript)
         if request.method == 'POST':
-            form_data = request.form.to_dict()
-            
-            # Lista de todas as chaves de configuração que queremos salvar
-            keys_to_save = [
-                'sugestao_channel_id', 'warn_log_channel_id', 
-                'delete_log_channel_id', 'voice_log_channel_id',
-                'audit_log_channel_id', # <<< A LINHA NOVA QUE FALTAVA
-                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 
-                'parceria_ping_role_id', 'welcome_message', 'goodbye_message'
-            ]
-            
-            # Salva o estado do sistema de XP
-            xp_status = 'true' if 'xp_system_enabled' in form_data else 'false'
-            update_setting(db, 'xp_system_enabled', xp_status)
+            data = request.get_json() # Pega os dados enviados como JSON
 
-            # Itera e salva cada uma das outras configurações de texto
-            for key in keys_to_save:
-                if key in form_data:
-                    update_setting(db, key, form_data[key])
-            
-            db.commit() # Salva todas as alterações no banco de dados de uma vez
+            # Itera e salva cada configuração recebida
+            for key, value in data.items():
+                update_setting(db, key, value)
+
+            db.commit()
+            # Responde com uma mensagem de sucesso em formato JSON
+            return jsonify(success=True, message="Configurações salvas com sucesso!")
 
         # Pega todas as configurações atuais do banco de dados para exibir na página
         all_settings = db.query(Setting).all()
         settings_dict = {s.key: s.value for s in all_settings}
-
     finally:
         db.close()
 
     return render_template('dashboard.html', user=user_info, settings=settings_dict)
-
 @app.route('/logout')
 def logout():
     session.clear()
