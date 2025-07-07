@@ -46,6 +46,7 @@ def callback():
 def dashboard():
     if 'access_token' not in session:
         return redirect(url_for('login'))
+
     headers = {'Authorization': f"Bearer {session['access_token']}"}
     user_info_res = requests.get(f"{API_BASE_URL}/users/@me", headers=headers)
     if user_info_res.status_code != 200:
@@ -55,29 +56,21 @@ def dashboard():
 
     db = SessionLocal()
     try:
+        # Se a requisição for um POST (envio de formulário pelo JavaScript)
         if request.method == 'POST':
-            form_data = request.form
-            
-            xp_status = 'true' if 'xp_system_enabled' in form_data else 'false'
-            update_setting(db, 'xp_system_enabled', xp_status)
-            
-            keys_to_save = [
-                'sugestao_channel_id', 'warn_log_channel_id', 'delete_log_channel_id',
-                'voice_log_channel_id', 'audit_log_channel_id', 'ticket_log_channel_id',
-                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 'parceria_ping_role_id',
-                'welcome_message', 'goodbye_message'
-            ]
-            for key in keys_to_save:
-                if key in form_data:
-                    update_setting(db, key, form_data[key])
+            data = request.get_json()
+            for key, value in data.items():
+                update_setting(db, key, value)
             db.commit()
-            return redirect(url_for('dashboard'))
+            # Em vez de recarregar a página, responde com uma mensagem de sucesso
+            return jsonify(success=True, message="Configurações salvas com sucesso!")
 
+        # Se for um GET (carregamento normal da página)
         all_settings = db.query(Setting).all()
         settings_dict = {s.key: s.value for s in all_settings}
     finally:
         db.close()
-    
+
     return render_template('dashboard.html', user=user_info, settings=settings_dict)
 
 @app.route('/logout')
