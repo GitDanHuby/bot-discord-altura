@@ -31,6 +31,7 @@ tree = app_commands.CommandTree(client)
 
 xp_cooldowns = {}
 music_queues = {}
+voice_join_times = {} # <--- ADICIONE ESTA LINHA
 
 # --- FUNÇÃO AUXILIAR PARA PEGAR CONFIGURAÇÕES DO DB ---
 def get_setting(key):
@@ -805,56 +806,89 @@ async def on_member_remove(member):
     else:
         print(f"Aviso: Canal de despedida '{goodbye_channel_name}' não encontrado no servidor '{member.guild.name}'.")
 
-# --- NOVO EVENTO on_voice_state_update ---
+# NOVO EVENTO on_voice_state_update (VERSÃO PROFISSIONAL)
 @client.event
 async def on_voice_state_update(member, before, after):
-    # Ignora bots para não poluir o log
+    # Ignora bots
     if member.bot:
         return
 
     # Pega o ID do canal de logs do banco de dados
     id_canal_logs_str = get_setting('voice_log_channel_id')
     if not id_canal_logs_str:
-        return # Não faz nada se não estiver configurado
+        return 
 
     log_channel = client.get_channel(int(id_canal_logs_str))
     if not log_channel:
         return
 
-    # Caso 1: Membro entrou em um canal de voz
+    # --- LÓGICA DE ENTRADA ---
     if not before.channel and after.channel:
-        embed = discord.Embed(
-            description=f"➡️ **{member.mention} entrou no canal de voz `{after.channel.name}`**",
-            color=discord.Color.green(),
-            timestamp=datetime.now()
-        )
-        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-        embed.set_footer(text=f"ID do Membro: {member.id}")
+        # Armazena o horário de entrada
+        voice_join_times[member.id] = datetime.now()
+        
+        embed = discord.Embed(color=discord.Color.green(), timestamp=datetime.now())
+        embed.set_author(name=f"Usuário {member.name} entrou no canal de voz", icon_url=member.display_avatar.url)
+        
+        embed.add_field(name="Membro", value=member.mention, inline=False)
+        embed.add_field(name="Canal", value=f"🔊 {after.channel.mention}", inline=False)
+        
+        membros_no_canal = ", ".join([m.mention for m in after.channel.members])
+        embed.add_field(name=f"Membros no canal ({len(after.channel.members)})", value=membros_no_canal, inline=False)
+        
+        limite = after.channel.user_limit
+        embed.add_field(name="Limite do canal", value=f"{len(after.channel.members)}/{limite if limite > 0 else '∞'}", inline=False)
+        
         await log_channel.send(embed=embed)
 
-    # Caso 2: Membro saiu de um canal de voz
+    # --- LÓGICA DE SAÍDA ---
     elif before.channel and not after.channel:
-        embed = discord.Embed(
-            description=f"⬅️ **{member.mention} saiu do canal de voz `{before.channel.name}`**",
-            color=discord.Color.red(),
-            timestamp=datetime.now()
-        )
-        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-        embed.set_footer(text=f"ID do Membro: {member.id}")
+        embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.now())
+        embed.set_author(name=f"Usuário {member.name} saiu do canal de voz", icon_url=member.display_avatar.url)
+
+        embed.add_field(name="Membro", value=member.mention, inline=False)
+        embed.add_field(name="Canal", value=f"🔊 `{before.channel.name}`", inline=False)
+
+        # Lógica para calcular o tempo gasto
+        if member.id in voice_join_times:
+            duracao = datetime.now() - voice_join_times[member.id]
+            del voice_join_times[member.id] # Remove o registro de tempo
+
+            dias = duracao.days
+            horas, resto = divmod(duracao.seconds, 3600)
+            minutos, segundos = divmod(resto, 60)
+            
+            tempo_gasto_str = ""
+            if dias > 0: tempo_gasto_str += f"{dias} dia(s), "
+            if horas > 0: tempo_gasto_str += f"{horas} hora(s), "
+            if minutos > 0: tempo_gasto_str += f"{minutos} minuto(s), "
+            tempo_gasto_str += f"{segundos} segundo(s)"
+            
+            embed.add_field(name="Tempo gasto no canal", value=tempo_gasto_str, inline=False)
+
         await log_channel.send(embed=embed)
         
-    # Caso 3: Membro trocou de canal de voz
+    # --- LÓGICA DE MUDANÇA DE CANAL ---
     elif before.channel and after.channel and before.channel != after.channel:
-        embed = discord.Embed(
-            description=f"🔄 **{member.mention} trocou de canal de voz**",
-            color=discord.Color.blue(),
-            timestamp=datetime.now()
-        )
-        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-        embed.add_field(name="Saiu de", value=f"`{before.channel.name}`", inline=False)
-        embed.add_field(name="Entrou em", value=f"`{after.channel.name}`", inline=False)
-        embed.set_footer(text=f"ID do Membro: {member.id}")
-        await log_channel.send(embed=embed)
+        # Log de saída do canal antigo
+        embed_leave = discord.Embed(color=discord.Color.red(), timestamp=datetime.now())
+        embed_leave.set_author(name=f"Usuário {member.name} saiu do canal de voz", icon_url=member.display_avatar.url)
+        embed_leave.add_field(name="Membro", value=member.mention, inline=False)
+        embed_leave.add_field(name="Canal", value=f"🔊 `{before.channel.name}`", inline=False)
+        # Calcula o tempo gasto no canal antigo
+        if member.id in voice_join_times:
+            duracao = datetime.now() - voice_join_times[member.id]
+            # ... (código de formatação de tempo omitido para simplicidade, mas a lógica está acima)
+            embed_leave.add_field(name="Tempo gasto no canal", value=f"{int(duracao.total_seconds())} segundos", inline=False)
+        await log_channel.send(embed=embed_leave)
+        
+        # Log de entrada no canal novo
+        voice_join_times[member.id] = datetime.now() # Reseta o tempo de entrada para o novo canal
+        embed_join = discord.Embed(color=discord.Color.green(), timestamp=datetime.now())
+        embed_join.set_author(name=f"Usuário {member.name} entrou no canal de voz", icon_url=member.display_avatar.url)
+        embed_join.add_field(name="Membro", value=member.mention, inline=False)
+        embed_join.add_field(name="Canal", value=f"🔊 {after.channel.mention}", inline=False)
+        await log_channel.send(embed=embed_join)
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
