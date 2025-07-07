@@ -889,6 +889,91 @@ async def on_voice_state_update(member, before, after):
         embed_join.add_field(name="Membro", value=member.mention, inline=False)
         embed_join.add_field(name="Canal", value=f"🔊 {after.channel.mention}", inline=False)
         await log_channel.send(embed=embed_join)
+
+# --- NOVOS EVENTOS DE LOG DE AUDITORIA ---
+
+@client.event
+async def on_guild_channel_create(channel):
+    # Pega o ID do canal de logs do banco de dados
+    log_channel_id_str = get_setting('audit_log_channel_id')
+    if not log_channel_id_str: return
+    log_channel = client.get_channel(int(log_channel_id_str))
+    if not log_channel: return
+
+    # Pega o registro de auditoria para saber quem criou o canal
+    executor = None
+    async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_create):
+        if entry.target.id == channel.id:
+            executor = entry.user
+            break
+    
+    embed = discord.Embed(title="✅ Canal Criado", color=discord.Color.green(), timestamp=datetime.now())
+    embed.add_field(name="Canal", value=channel.mention, inline=False)
+    if executor:
+        embed.add_field(name="Executor", value=executor.mention, inline=False)
+    if channel.category:
+        embed.add_field(name="Categoria", value=channel.category.name, inline=False)
+
+    await log_channel.send(embed=embed)
+
+
+@client.event
+async def on_guild_channel_delete(channel):
+    log_channel_id_str = get_setting('audit_log_channel_id')
+    if not log_channel_id_str: return
+    log_channel = client.get_channel(int(log_channel_id_str))
+    if not log_channel: return
+
+    executor = None
+    async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+        if entry.target.id == channel.id:
+            executor = entry.user
+            break
+
+    embed = discord.Embed(title="🗑️ Canal Deletado", color=discord.Color.red(), timestamp=datetime.now())
+    embed.add_field(name="Nome do Canal", value=f"`# {channel.name}`", inline=False)
+    if executor:
+        embed.add_field(name="Executor", value=executor.mention, inline=False)
+    if channel.category:
+        embed.add_field(name="Categoria", value=channel.category.name, inline=False)
+
+    await log_channel.send(embed=embed)
+
+
+@client.event
+async def on_guild_role_update(before, after):
+    log_channel_id_str = get_setting('audit_log_channel_id')
+    if not log_channel_id_str: return
+    log_channel = client.get_channel(int(log_channel_id_str))
+    if not log_channel: return
+
+    executor = None
+    async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_update):
+        if entry.target.id == after.id:
+            executor = entry.user
+            break
+            
+    # Se nada mudou de relevante, não loga
+    if before.name == after.name and before.color == after.color and before.permissions == after.permissions:
+        return
+
+    embed = discord.Embed(title="🎭 Cargo Atualizado", color=discord.Color.yellow(), timestamp=datetime.now())
+    embed.add_field(name="Cargo", value=after.mention, inline=False)
+    
+    mudancas = ""
+    if before.name != after.name:
+        mudancas += f"**Nome:** `{before.name}` -> `{after.name}`\n"
+    if before.color != after.color:
+        mudancas += f"**Cor:** `{before.color}` -> `{after.color}`\n"
+    if before.permissions != after.permissions:
+        mudancas += "**Permissões foram alteradas.**\n"
+        
+    embed.add_field(name="Mudanças", value=mudancas, inline=False)
+    
+    if executor:
+        embed.add_field(name="Executor", value=executor.mention, inline=False)
+
+    await log_channel.send(embed=embed)
 # =================================================================================
 # --- INICIA O SITE E O BOT ---
 # =================================================================================
