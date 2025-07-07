@@ -52,15 +52,26 @@ def dashboard():
         session.clear()
         return redirect(url_for('login'))
     user_info = user_info_res.json()
-    
+
     db = SessionLocal()
     try:
         if request.method == 'POST':
-            data = request.get_json()
-            for key, value in data.items():
-                update_setting(db, key, value)
+            form_data = request.form
+            
+            xp_status = 'true' if 'xp_system_enabled' in form_data else 'false'
+            update_setting(db, 'xp_system_enabled', xp_status)
+            
+            keys_to_save = [
+                'sugestao_channel_id', 'warn_log_channel_id', 'delete_log_channel_id',
+                'voice_log_channel_id', 'audit_log_channel_id', 'ticket_log_channel_id',
+                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 'parceria_ping_role_id',
+                'welcome_message', 'goodbye_message'
+            ]
+            for key in keys_to_save:
+                if key in form_data:
+                    update_setting(db, key, form_data[key])
             db.commit()
-            return jsonify(success=True, message="Configurações salvas com sucesso!")
+            return redirect(url_for('dashboard'))
 
         all_settings = db.query(Setting).all()
         settings_dict = {s.key: s.value for s in all_settings}
