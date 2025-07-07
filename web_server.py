@@ -78,6 +78,7 @@ def dashboard():
             keys_to_save = [
                 'sugestao_channel_id', 'warn_log_channel_id', 
                 'delete_log_channel_id', 'voice_log_channel_id',
+                'audit_log_channel_id', # <<< A LINHA NOVA QUE FALTAVA
                 'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 
                 'parceria_ping_role_id', 'welcome_message', 'goodbye_message'
             ]
