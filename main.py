@@ -258,7 +258,6 @@ async def ip(interaction: discord.Interaction):
 @tree.command(name="regras", description="Mostra as regras principais do servidor.")
 async def regras(interaction: discord.Interaction):
     regras_texto = """
-    **1. Siga as diretrizes do Discord:** Termos | Regras.
     **2. Nicks e perfis devem ser legíveis e adequados.** Nada de "Staff", fontes estranhas ou conteúdo adulto.
     **3. Não use imagens de outros sem permissão.**
     **4. Contas fakes ou secundárias são proibidas.**
@@ -279,8 +278,20 @@ async def regras(interaction: discord.Interaction):
     > Ao permanecer no servidor, você aceita todas as regras.
     *📅 Atualizado em: 16/06/2025*
     """
-    embed_regras = discord.Embed(title="📜 Regras do Discord - Altura RP City", description=regras_texto, color=discord.Color.orange())
+    
+    # Criamos o embed principal com a Regra 1 e o resto
+    embed_regras = discord.Embed(
+        title="📜 Regras do Discord - Altura RP City",
+        description=f"**1. Siga as diretrizes da plataforma Discord.**\n\n{regras_texto}",
+        color=discord.Color.orange()
+    )
+
+    # Enviamos o embed primeiro
     await interaction.response.send_message(embed=embed_regras)
+    
+    # Em seguida, enviamos o link separadamente no mesmo canal para gerar a pré-visualização
+    # Usamos followup.send() porque já respondemos à interação
+    await interaction.followup.send("https://discord.com/terms")
 
 @tree.command(name="redes_sociais", description="Mostra as redes sociais oficiais do servidor.")
 async def redes_sociais(interaction: discord.Interaction):
