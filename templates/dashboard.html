@@ -69,6 +69,9 @@
                 
                 <br><br>
                 <label for="voice_log_channel">ID do Canal de Logs de Voz:</label> <input type="text" id="voice_log_channel" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}"> <br><br>
+                <br><br>
+                <label for="audit_log_channel">ID do Canal de Logs de Auditoria (Geral):</label>
+                <input type="text" id="audit_log_channel" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
                 <h3>Sistema de Parceria</h3>
                 <label for="parceria_gatilho_role">ID do Cargo Gatilho de Parceria:</label>
                 <input type="text" id="parceria_gatilho_role" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
