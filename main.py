@@ -531,6 +531,43 @@ async def limpar_error(interaction: discord.Interaction, error: app_commands.App
         print(f"Erro no comando /limpar: {error}")
         await interaction.response.send_message("Ocorreu um erro inesperado ao tentar limpar as mensagens.", ephemeral=True)
 
+# --- NOVO COMANDO /embed ---
+@tree.command(name="embed", description="Envia uma mensagem formatada (embed) para um canal específico.")
+@app_commands.describe(
+    canal="O canal para onde a mensagem será enviada.",
+    mensagem="A mensagem que você quer enviar. Use '\\n' para pular linha."
+)
+@app_commands.checks.has_permissions(manage_guild=True) # Apenas quem pode gerenciar o servidor pode usar
+async def embed(interaction: discord.Interaction, canal: discord.TextChannel, mensagem: str):
+    
+    # Substitui a marcação "\\n" por quebras de linha reais
+    mensagem_formatada = mensagem.replace('\\n', '\n')
+    
+    # Cria a mensagem embed
+    embed_personalizado = discord.Embed(
+        description=mensagem_formatada,
+        color=discord.Color.blue() # Você pode mudar a cor se quiser
+    )
+    
+    try:
+        # Envia a mensagem para o canal escolhido
+        await canal.send(embed=embed_personalizado)
+        # Responde ao usuário que deu o comando (só ele vê)
+        await interaction.response.send_message(f"✅ Mensagem enviada com sucesso para o canal {canal.mention}!", ephemeral=True)
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ Erro: Eu não tenho permissão para enviar mensagens nesse canal.", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"Ocorreu um erro inesperado: {e}", ephemeral=True)
+
+# Tratador de erro para o comando /embed
+@embed.error
+async def embed_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message("❌ Você não tem permissão para usar este comando.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Ocorreu um erro inesperado.", ephemeral=True)
+        print(f"Erro no comando /embed: {error}")
+
 # --- COMANDOS DE MÚSICA COM SISTEMA DE FILA ---
 
 @tree.command(name="play", description="Toca uma música ou a adiciona na fila.")
