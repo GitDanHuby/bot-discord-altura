@@ -54,6 +54,8 @@ def callback():
     session['access_token'] = token_info['access_token']
     return redirect(url_for('dashboard'))
 
+# DENTRO DE web_server.py, SUBSTITUA A FUNÇÃO INTEIRA ABAIXO
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'access_token' not in session:
@@ -70,29 +72,26 @@ def dashboard():
     try:
         # Se o formulário for enviado (método POST)
         if request.method == 'POST':
-            # Pega todos os dados do formulário de uma vez
             form_data = request.form.to_dict()
+            
+            # Lista de todas as chaves de configuração que queremos salvar
+            keys_to_save = [
+                'sugestao_channel_id', 'warn_log_channel_id', 
+                'delete_log_channel_id', 'voice_log_channel_id',
+                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 
+                'parceria_ping_role_id', 'welcome_message', 'goodbye_message'
+            ]
             
             # Salva o estado do sistema de XP
             xp_status = 'true' if 'xp_system_enabled' in form_data else 'false'
             update_setting(db, 'xp_system_enabled', xp_status)
 
-            # Lista de todas as outras chaves que queremos salvar
-            keys_to_save = [
-               
-                'sugestao_channel_id', 'warn_log_channel_id', 'delete_log_channel_id',
-                'voice_log_channel_id', # <-- ADICIONE ESTA CHAVE
-                'audit_log_channel_id'
-                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 'parceria_ping_role_id',
-                'welcome_message', 'goodbye_message'
-            ]
-            
-            # Itera e salva cada configuração
+            # Itera e salva cada uma das outras configurações de texto
             for key in keys_to_save:
                 if key in form_data:
                     update_setting(db, key, form_data[key])
             
-            db.commit()
+            db.commit() # Salva todas as alterações no banco de dados de uma vez
 
         # Pega todas as configurações atuais do banco de dados para exibir na página
         all_settings = db.query(Setting).all()
@@ -100,10 +99,6 @@ def dashboard():
 
     finally:
         db.close()
-
-    # Se a configuração do XP não existir, define como 'true' por padrão
-    if 'xp_system_enabled' not in settings_dict:
-        settings_dict['xp_system_enabled'] = 'true'
 
     return render_template('dashboard.html', user=user_info, settings=settings_dict)
 
