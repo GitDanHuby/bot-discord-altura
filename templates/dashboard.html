@@ -5,187 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - Altura RP City</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
-        body {
-            background-color: #16181D; /* Azul bem escuro */
-            color: #E1E1E6;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            display: flex;
-        }
-
-        /* --- Barra Lateral de Navegação --- */
-        .sidebar {
-            width: 240px;
-            background-color: #1F2128;
-            padding: 20px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #292C3A;
-        }
-        .sidebar .profile {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .sidebar .profile img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid #8257E5; /* Roxo */
-        }
-        .sidebar .profile h3 {
-            margin: 10px 0 0;
-            color: #E1E1E6;
-        }
-        .sidebar nav ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar nav li a {
-            display: block;
-            padding: 12px 15px;
-            text-decoration: none;
-            color: #A8A8B3;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .sidebar nav li a:hover, .sidebar nav li a.active {
-            background-color: #3A3D4A;
-            color: #FFFFFF;
-        }
-        .sidebar .logout-btn {
-            margin-top: auto;
-            background-color: #CC2936;
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background-color 0.3s;
-        }
-        .sidebar .logout-btn:hover {
-            background-color: #A61F29;
-        }
-
-        /* --- Conteúdo Principal --- */
-        .main-content {
-            flex-grow: 1;
-            padding: 40px;
-            overflow-y: auto;
-            height: 100vh;
-        }
-        .page-content {
-            display: none; /* Esconde todas as páginas por padrão */
-        }
-        .page-content.active {
-            display: block; /* Mostra apenas a página ativa */
-        }
-
-        /* Estilos dos Módulos de Configuração */
-        .module {
-            background-color: #1F2128;
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border: 1px solid #292C3A;
-        }
-        h1, h2 {
-            border-bottom: 1px solid #50fa7b;
-            padding-bottom: 10px;
-            color: #50fa7b;
-        }
-        label { display: block; margin-top: 15px; color: #A8A8B3; }
-        textarea, input[type="text"] {
-            width: 98%;
-            background-color: #16181D;
-            color: #E1E1E6;
-            border: 1px solid #44475a;
-            border-radius: 5px;
-            padding: 10px;
-            font-size: 1em;
-            margin-top: 8px;
-        }
-        button {
-            background: linear-gradient(90deg, #996DFF, #8257E5);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin-top: 20px;
-        }
+        body { background-color: #1e1e2e; color: #f2f2f2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #44475a; padding-bottom: 20px; margin-bottom: 20px; }
+        img.avatar { border-radius: 50%; vertical-align: middle; margin-right: 15px; }
+        .logout-btn { background-color: #ff5555; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; }
+        h1, h2, h3 { color: #50fa7b; }
+        textarea, input[type="text"] { width: 95%; background-color: #44475a; color: white; border: 1px solid #6272a4; border-radius: 5px; padding: 10px; font-size: 1em; margin-top: 5px; }
+        button { background-color: #bd93f9; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 20px;}
+        .module { background-color: #282a36; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .dashboard-layout { display: flex; flex-wrap: wrap; gap: 20px; }
+        .main-column { flex: 2; min-width: 300px; }
+        .side-column { flex: 1; min-width: 300px; }
+        .notification { position: fixed; top: 20px; right: 20px; background-color: #50fa7b; color: #282a36; padding: 15px; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="profile">
-            <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar">
-            <h3>{{ user.username }}</h3>
+    <div class="container">
+        <div class="header">
+            <div>
+                <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=64" alt="Avatar" class="avatar">
+                <span>Logado como: **{{ user.username }}**</span>
+            </div>
+            <a href="/logout" class="logout-btn">Sair</a>
         </div>
-        <nav>
-            <ul>
-                <li><a href="#" class="nav-link active" data-target="general">Configurações Gerais</a></li>
-                <li><a href="#" class="nav-link" data-target="messages">Mensagens</a></li>
-                <li><a href="#" class="nav-link" data-target="modules">Módulos</a></li>
-            </ul>
-        </nav>
-        <a href="/logout" class="logout-btn">Sair</a>
-    </aside>
-
-    <main class="main-content">
-        <h1>Painel de Controle - Altura RP City</h1>
+        
+        <h1>Painel de Controle</h1>
+        <p>Configure os módulos e mensagens automáticas do seu bot.</p>
+        
         <form id="settings-form">
-            
-            <div id="general" class="page-content active">
-                <h2>Configuração de Canais e Cargos</h2>
-                <div class="module">
+            <div class="dashboard-layout">
+                <div class="main-column">
+                    <div class="module">
+                        <h2>Mensagens Customizáveis</h2>
+                        <label for="welcome_message">Mensagem de Boas-Vindas:</label>
+                        <textarea name="welcome_message">{{ settings.get('welcome_message', '') }}</textarea>
+                        <br><br>
+                        <label for="goodbye_message">Mensagem de Despedida:</label>
+                        <textarea name="goodbye_message">{{ settings.get('goodbye_message', '') }}</textarea>
                     </div>
-                 <div class="module">
-                    <h3>Sistema de Parceria</h3>
+                </div>
+                <div class="side-column">
+                    <div class="module">
+                        <h3>Módulos</h3>
+                        <input type="checkbox" name="xp_system_enabled" {{ 'checked' if settings.get('xp_system_enabled', 'true') == 'true' else '' }}>
+                        <label>Sistema de Níveis (XP)</label>
                     </div>
+                    <div class="module">
+                        <h3>Configuração de IDs</h3>
+                        <label>Canal de Logs de Auditoria:</label>
+                        <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
+                        <label>Canal de Logs de Voz:</label>
+                        <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
+                        <label>Canal de Logs de Msgs Deletadas:</label>
+                        <input type="text" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
+                        <label>Canal de Logs de Avisos:</label>
+                        <input type="text" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
+                        <label>Canal de Sugestões:</label>
+                        <input type="text" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+                    </div>
+                </div>
             </div>
-
-            <div id="messages" class="page-content">
-                <h2>Mensagens Customizáveis</h2>
-                <div class="module">
-                    </div>
-            </div>
-
-            <div id="modules" class="page-content">
-                <h2>Ativar/Desativar Módulos</h2>
-                <div class="module">
-                    </div>
+            <div class="module">
+                <h3>Sistema de Parceria</h3>
+                <label>ID do Cargo Gatilho:</label>
+                <input type="text" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
+                <label>ID do Canal de Anúncio:</label>
+                <input type="text" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
+                <label>ID do Cargo Ping:</label>
+                <input type="text" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
             </div>
             
             <button type="submit">Salvar Todas as Configurações</button>
         </form>
-    </main>
-
-    <script>
-        // Script para a navegação por abas
-        const navLinks = document.querySelectorAll('.nav-link');
-        const pages = document.querySelectorAll('.page-content');
-
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                navLinks.forEach(l => l.classList.remove('active'));
-                pages.forEach(p => p.classList.remove('active'));
-                
-                this.classList.add('active');
-                document.getElementById(this.dataset.target).classList.add('active');
-            });
-        });
-
-        // Script para salvar o formulário (o que já fizemos)
-        document.getElementById('settings-form').addEventListener('submit', function(event) {
-            // ... (o script de salvar continua aqui, sem alterações) ...
-        });
-    </script>
+    </div>
 </body>
-</html>
+                    </html>
