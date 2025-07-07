@@ -286,12 +286,12 @@ async def regras(interaction: discord.Interaction):
         color=discord.Color.orange()
     )
 
-    # Enviamos o embed primeiro
-    await interaction.response.send_message(embed=embed_regras)
+    # Primeiro, enviamos uma resposta de confirmação efêmera para o usuário
+    await interaction.response.send_message("✅ Enviando as regras...", ephemeral=True)
     
-    # Em seguida, enviamos o link separadamente no mesmo canal para gerar a pré-visualização
-    # Usamos followup.send() porque já respondemos à interação
-    await interaction.followup.send("https://discord.com/terms")
+    # Em seguida, enviamos as regras e o link como mensagens normais no canal
+    await interaction.channel.send(embed=embed_regras)
+    await interaction.channel.send("https://discord.com/terms")
 
 @tree.command(name="redes_sociais", description="Mostra as redes sociais oficiais do servidor.")
 async def redes_sociais(interaction: discord.Interaction):
