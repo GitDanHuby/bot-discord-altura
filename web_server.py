@@ -79,7 +79,9 @@ def dashboard():
 
             # Lista de todas as outras chaves que queremos salvar
             keys_to_save = [
+               
                 'sugestao_channel_id', 'warn_log_channel_id', 'delete_log_channel_id',
+                'voice_log_channel_id', # <-- ADICIONE ESTA CHAVE
                 'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 'parceria_ping_role_id',
                 'welcome_message', 'goodbye_message'
             ]
