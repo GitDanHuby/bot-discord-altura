@@ -24,8 +24,8 @@ def update_setting(db, key, value):
     if setting:
         setting.value = value
     else:
-        new_setting = Setting(key=key, value=value)
-        db.add(new_setting)
+        setting = Setting(key=key, value=value)
+        db.add(setting)
 
 @app.route('/')
 def home():
@@ -52,32 +52,21 @@ def dashboard():
         session.clear()
         return redirect(url_for('login'))
     user_info = user_info_res.json()
+    
     db = SessionLocal()
     try:
         if request.method == 'POST':
-            form_data = request.form
-            
-            xp_status = 'true' if 'xp_system_enabled' in form_data else 'false'
-            update_setting(db, 'xp_system_enabled', xp_status)
-            
-            keys_to_save = [
-                'sugestao_channel_id', 'warn_log_channel_id', 'delete_log_channel_id',
-                'voice_log_channel_id', 'audit_log_channel_id',
-                'parceria_gatilho_role_id', 'parceria_anuncio_channel_id', 'parceria_ping_role_id',
-                'welcome_message', 'goodbye_message'
-            ]
-            for key in keys_to_save:
-                if key in form_data:
-                    update_setting(db, key, form_data[key])
+            data = request.get_json()
+            for key, value in data.items():
+                update_setting(db, key, value)
             db.commit()
-            return redirect(url_for('dashboard'))
+            return jsonify(success=True, message="Configurações salvas com sucesso!")
 
         all_settings = db.query(Setting).all()
         settings_dict = {s.key: s.value for s in all_settings}
     finally:
         db.close()
-    if 'xp_system_enabled' not in settings_dict:
-        settings_dict['xp_system_enabled'] = 'true'
+    
     return render_template('dashboard.html', user=user_info, settings=settings_dict)
 
 @app.route('/logout')
