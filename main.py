@@ -506,6 +506,31 @@ async def anunciar(interaction: discord.Interaction, titulo: str, mensagem: str,
     except Exception as e:
         await interaction.response.send_message(f"❌ Ocorreu um erro ao enviar o anúncio: {e}", ephemeral=True)
 
+# --- NOVO COMANDO /limpar ---
+@tree.command(name="limpar", description="Apaga uma quantidade específica de mensagens do canal atual.")
+@app_commands.describe(quantidade="O número de mensagens a serem deletadas (entre 1 e 100).")
+@app_commands.checks.has_permissions(manage_messages=True) # Só quem pode gerenciar mensagens pode usar
+async def limpar(interaction: discord.Interaction, quantidade: app_commands.Range[int, 1, 100]):
+    
+    # Adia a resposta, pois apagar mensagens pode demorar um pouco
+    await interaction.response.defer(ephemeral=True)
+    
+    # Apaga as mensagens
+    deleted_messages = await interaction.channel.purge(limit=quantidade)
+    
+    # Envia uma mensagem de confirmação que só o autor do comando vê
+    await interaction.followup.send(f"✅ Limpeza concluída! {len(deleted_messages)} mensagens foram removidas.", ephemeral=True)
+
+# Tratador de erro para o comando /limpar
+@limpar.error
+async def limpar_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message("❌ Você não tem permissão para usar este comando.", ephemeral=True)
+    else:
+        # Envia a mensagem de erro detalhada no console da Railway para depuração
+        print(f"Erro no comando /limpar: {error}")
+        await interaction.response.send_message("Ocorreu um erro inesperado ao tentar limpar as mensagens.", ephemeral=True)
+
 # --- COMANDOS DE MÚSICA COM SISTEMA DE FILA ---
 
 @tree.command(name="play", description="Toca uma música ou a adiciona na fila.")
