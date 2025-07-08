@@ -427,49 +427,76 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
     finally:
         db.close()
 
-# NOVO COMANDO /leaderboard
-@tree.command(name="leaderboard", description="Mostra os membros com mais XP no servidor.")
-async def leaderboard(interaction: discord.Interaction):
-    await interaction.response.defer() # Adia a resposta, pois a busca no DB pode demorar um pouco
+# --- NOVO COMANDO /leaderboard COM PAGINAÇÃO ---
 
+# Classe da View que cria os botões e controla a paginação
+class LeaderboardView(discord.ui.View):
+    def __init__(self, ranked_users):
+        super().__init__(timeout=120) # A view expira em 2 minutos
+        self.ranked_users = ranked_users
+        self.current_page = 0
+        self.users_per_page = 5 # Quantos usuários mostrar por página
+
+    async def get_page_content(self):
+        start_index = self.current_page * self.users_per_page
+        end_index = start_index + self.users_per_page
+        
+        embed = discord.Embed(title=f"🏆 Classificação do Servidor - Página {self.current_page + 1}", color=discord.Color.gold())
+        
+        description = ""
+        # Loop para adicionar cada usuário da página atual na descrição
+        for i, user_data in enumerate(self.ranked_users[start_index:end_index], start=start_index + 1):
+            # Tenta encontrar o membro no servidor pelo ID para pegar o nome atualizado
+            member = client.get_user(user_data.id)
+            member_name = member.name if member else f"ID: {user_data.id}"
+            description += f"**#{i}** | **{member_name}**\n"
+            description += f"> **Nível:** {user_data.level} | **XP:** {user_data.xp}\n\n"
+        
+        if not description:
+            description = "Não há mais usuários para mostrar."
+
+        embed.description = description
+        embed.set_footer(text=f"Total de usuários com XP: {len(self.ranked_users)}")
+        return embed
+
+    @discord.ui.button(label="⬅️ Anterior", style=discord.ButtonStyle.secondary, custom_id="lb_prev_v2")
+    async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.current_page > 0:
+            self.current_page -= 1
+            embed = await self.get_page_content()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.defer() # Apenas confirma a interação sem fazer nada
+
+    @discord.ui.button(label="Próximo ➡️", style=discord.ButtonStyle.secondary, custom_id="lb_next_v2")
+    async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if (self.current_page + 1) * self.users_per_page < len(self.ranked_users):
+            self.current_page += 1
+            embed = await self.get_page_content()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.defer() # Apenas confirma a interação
+
+# O comando de barra que inicia o leaderboard
+@tree.command(name="leaderboard", description="Mostra o ranking de XP do servidor.")
+async def leaderboard(interaction: discord.Interaction):
+    await interaction.response.defer()
     db = SessionLocal()
     try:
-        # Pega os 10 usuários com mais XP, em ordem decrescente
-        top_users = db.query(User).order_by(User.xp.desc()).limit(10).all()
-
-        embed = discord.Embed(
-            title="🏆 Ranking de Atividade do Servidor",
-            description="Os membros mais ativos do Altura RP City!",
-            color=discord.Color.gold()
-        )
-
-        if not top_users:
-            embed.description = "Ainda não há ninguém no ranking. Comece a conversar!"
-        else:
-            # Cria a lista de texto para o ranking
-            leaderboard_text = ""
-            for i, user_data in enumerate(top_users):
-                try:
-                    # Tenta encontrar o membro no servidor pelo ID
-                    member = await interaction.guild.fetch_member(user_data.id)
-                    member_name = member.display_name
-                except discord.NotFound:
-                    # Se o membro não for encontrado (saiu do servidor), mostra o ID
-                    member_name = f"Membro Desconhecido ({user_data.id})"
-                
-                # Monta a linha do ranking
-                leaderboard_text += f"**{i+1}.** {member_name} - **Nível {user_data.level}** ({user_data.xp} XP)\n"
+        all_users_ranked = db.query(User).order_by(desc(User.xp)).all()
+        
+        if not all_users_ranked:
+            await interaction.followup.send("Ainda não há ninguém no ranking. Comecem a conversar!")
+            return
             
-            embed.description = leaderboard_text
-
-    except Exception as e:
-        print(f"Erro ao buscar o leaderboard: {e}")
-        embed = discord.Embed(title="❌ Erro", description="Não foi possível buscar o ranking no momento.", color=discord.Color.red())
+        # Cria a view e envia a primeira página
+        view = LeaderboardView(all_users_ranked)
+        initial_embed = await view.get_page_content()
+        await interaction.followup.send(embed=initial_embed, view=view)
+        
     finally:
         db.close()
 
-    # Usa followup.send() porque já adiamos a resposta
-    await interaction.followup.send(embed=embed)
 
 @tree.command(name="set_goodbye_message", description="Define a mensagem de despedida do servidor (Staff only).")
 @app_commands.checks.has_permissions(manage_guild=True)
