@@ -386,7 +386,6 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
         draw_mask.ellipse((0, 0) + avatar_img.size, fill=255)
         bg.paste(avatar_img, (50, 75), mask)
 
-        # --- NOVO LAYOUT DO TEXTO ---
         # Escreve a CLASSIFICAÇÃO em destaque
         draw.text((230, 80), f"#{user_rank}", font=font_rank, fill="#FFFFFF", stroke_width=2, stroke_fill="#000000")
 
@@ -401,8 +400,8 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
         if xp_para_proximo_level > 0:
             progresso_percentual = xp / xp_para_proximo_level
             if progresso_percentual > 1: progresso_percentual = 1
-            draw.rectangle((50, 250, 750, 280), fill="#404040") # Barra de fundo
-            draw.rectangle((50, 250, 50 + (progresso_percentual * 700), 280), fill="#50fa7b") # Barra de progresso
+            draw.rectangle((50, 250, 750, 280), fill="#404040")
+            draw.rectangle((50, 250, 50 + (progresso_percentual * 700), 280), fill="#50fa7b")
 
         # Salva e envia a imagem
         final_buffer = BytesIO()
