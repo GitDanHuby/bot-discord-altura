@@ -177,6 +177,68 @@ class DashboardView(discord.ui.View):
         super().__init__()
         # Adiciona o botão que é um link
         self.add_item(discord.ui.Button(label="Acessar o Painel de Controle", style=discord.ButtonStyle.link, url=url, emoji="🚀"))
+
+# --- CLASSE PARA A VIEW DO LEADERBOARD COM FOTOS ---
+class LeaderboardView(discord.ui.View):
+    def __init__(self, ranked_users, client):
+        super().__init__(timeout=180) # A view expira em 3 minutos
+        self.ranked_users = ranked_users
+        self.client = client
+        self.current_page = 0
+        self.users_per_page = 5 # Mostrar 5 usuários por página
+
+    async def get_page_content(self):
+        start_index = self.current_page * self.users_per_page
+        end_index = start_index + self.users_per_page
+        
+        embed = discord.Embed(title=f"🏆 Classificação do Servidor - Página {self.current_page + 1}", color=discord.Color.gold())
+        
+        # Prepara para adicionar as fotos de perfil como thumbnails
+        # Pega o avatar do primeiro usuário da página para ser a imagem principal do embed
+        if self.ranked_users[start_index:end_index]:
+            first_user_id = self.ranked_users[start_index].id
+            try:
+                first_user = await self.client.fetch_user(first_user_id)
+                embed.set_thumbnail(url=first_user.display_avatar.url)
+            except discord.NotFound:
+                pass # Se não achar o usuário, não coloca thumbnail
+
+        description = ""
+        # Loop para adicionar cada usuário da página atual na descrição
+        for i, user_data in enumerate(self.ranked_users[start_index:end_index], start=start_index + 1):
+            try:
+                member = await self.client.fetch_user(user_data.id)
+                member_name = member.name
+            except discord.NotFound:
+                 member_name = f"Membro Desconhecido ({user_data.id})"
+
+            description += f"**#{i}** | **{member_name}**\n"
+            description += f"> **Nível:** {user_data.level} | **XP Total:** {user_data.xp}\n\n"
+        
+        if not description:
+            description = "Não há mais usuários para mostrar."
+
+        embed.description = description
+        embed.set_footer(text=f"Total de usuários com XP: {len(self.ranked_users)}")
+        return embed
+
+    @discord.ui.button(label="⬅️ Anterior", style=discord.ButtonStyle.secondary, custom_id="lb_prev_photo")
+    async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.current_page > 0:
+            self.current_page -= 1
+            embed = await self.get_page_content()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.defer()
+
+    @discord.ui.button(label="Próximo ➡️", style=discord.ButtonStyle.secondary, custom_id="lb_next_photo")
+    async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if (self.current_page + 1) * self.users_per_page < len(self.ranked_users):
+            self.current_page += 1
+            embed = await self.get_page_content()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.defer()
 # =================================================================================
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
 # =================================================================================
@@ -427,57 +489,6 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
     finally:
         db.close()
 
-# --- NOVO COMANDO /leaderboard COM PAGINAÇÃO ---
-
-# Classe da View que cria os botões e controla a paginação
-class LeaderboardView(discord.ui.View):
-    def __init__(self, ranked_users):
-        super().__init__(timeout=120) # A view expira em 2 minutos
-        self.ranked_users = ranked_users
-        self.current_page = 0
-        self.users_per_page = 5 # Quantos usuários mostrar por página
-
-    async def get_page_content(self):
-        start_index = self.current_page * self.users_per_page
-        end_index = start_index + self.users_per_page
-        
-        embed = discord.Embed(title=f"🏆 Classificação do Servidor - Página {self.current_page + 1}", color=discord.Color.gold())
-        
-        description = ""
-        # Loop para adicionar cada usuário da página atual na descrição
-        for i, user_data in enumerate(self.ranked_users[start_index:end_index], start=start_index + 1):
-            # Tenta encontrar o membro no servidor pelo ID para pegar o nome atualizado
-            member = client.get_user(user_data.id)
-            member_name = member.name if member else f"ID: {user_data.id}"
-            description += f"**#{i}** | **{member_name}**\n"
-            description += f"> **Nível:** {user_data.level} | **XP:** {user_data.xp}\n\n"
-        
-        if not description:
-            description = "Não há mais usuários para mostrar."
-
-        embed.description = description
-        embed.set_footer(text=f"Total de usuários com XP: {len(self.ranked_users)}")
-        return embed
-
-    @discord.ui.button(label="⬅️ Anterior", style=discord.ButtonStyle.secondary, custom_id="lb_prev_v2")
-    async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.current_page > 0:
-            self.current_page -= 1
-            embed = await self.get_page_content()
-            await interaction.response.edit_message(embed=embed, view=self)
-        else:
-            await interaction.response.defer() # Apenas confirma a interação sem fazer nada
-
-    @discord.ui.button(label="Próximo ➡️", style=discord.ButtonStyle.secondary, custom_id="lb_next_v2")
-    async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if (self.current_page + 1) * self.users_per_page < len(self.ranked_users):
-            self.current_page += 1
-            embed = await self.get_page_content()
-            await interaction.response.edit_message(embed=embed, view=self)
-        else:
-            await interaction.response.defer() # Apenas confirma a interação
-
-# O comando de barra que inicia o leaderboard
 @tree.command(name="leaderboard", description="Mostra o ranking de XP do servidor.")
 async def leaderboard(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -489,8 +500,7 @@ async def leaderboard(interaction: discord.Interaction):
             await interaction.followup.send("Ainda não há ninguém no ranking. Comecem a conversar!")
             return
             
-        # Cria a view e envia a primeira página
-        view = LeaderboardView(all_users_ranked)
+        view = LeaderboardView(all_users_ranked, client)
         initial_embed = await view.get_page_content()
         await interaction.followup.send(embed=initial_embed, view=view)
         
