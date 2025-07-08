@@ -338,26 +338,28 @@ async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
     await mensagem_enviada.add_reaction("👎")
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso!", ephemeral=True)
 
-# --- COMANDO /rank ATUALIZADO E FINAL ---
+# --- COMANDO /rank COM IMAGEM E VERIFICAÇÃO DE ERROS ---
+from PIL import Image, ImageDraw, ImageFont
+import requests
+from io import BytesIO
+from sqlalchemy import desc
+
 @tree.command(name="rank", description="Mostra seu cartão de rank personalizado.")
 @app_commands.describe(membro="Veja o rank de outro membro (opcional).")
 async def rank(interaction: discord.Interaction, membro: discord.Member = None):
-    await interaction.response.defer()
+    await interaction.response.defer() # Adia a resposta para dar tempo
     target_user = membro or interaction.user
 
     db = SessionLocal()
     try:
-        # Pega todos os usuários ordenados por XP para encontrar a classificação
+        # Pega todos os usuários para calcular o rank
         all_users_ranked = db.query(User).order_by(desc(User.xp)).all()
-        
         user_rank = -1
-        # Encontra a posição (rank) do usuário na lista
         for i, user in enumerate(all_users_ranked):
             if user.id == target_user.id:
                 user_rank = i + 1
                 break
         
-        # Pega os dados específicos do usuário alvo
         user_data = db.query(User).filter(User.id == target_user.id).first()
         if not user_data or user_rank == -1:
             await interaction.followup.send(f"{target_user.name} ainda não tem XP para ser classificado.", ephemeral=True)
@@ -367,32 +369,41 @@ async def rank(interaction: discord.Interaction, membro: discord.Member = None):
         xp = user_data.xp
         xp_para_proximo_level = (5 * (level ** 2)) + (50 * level) + 100
 
-        # Carrega a imagem de fundo e as fontes
-        bg = Image.open("assets/rank_bg.png").convert("RGBA")
-        font_rank = ImageFont.truetype("assets/font.ttf", 60)
-        font_level = ImageFont.truetype("assets/font.ttf", 30)
-        font_name = ImageFont.truetype("assets/font.ttf", 35)
-        font_xp = ImageFont.truetype("assets/font.ttf", 25)
+        # Tenta carregar a imagem de fundo
+        try:
+            bg = Image.open("assets/rank_bg.png").convert("RGBA")
+        except FileNotFoundError:
+            await interaction.followup.send("❌ **Erro de Configuração:** Não encontrei o arquivo `rank_bg.png` na pasta `assets` do GitHub.", ephemeral=True)
+            return
+
+        # Tenta carregar a fonte
+        try:
+            font_rank = ImageFont.truetype("assets/font.ttf", 60)
+            font_level = ImageFont.truetype("assets/font.ttf", 30)
+            font_name = ImageFont.truetype("assets/font.ttf", 35)
+        except IOError:
+            await interaction.followup.send("❌ **Erro de Configuração:** Não encontrei o arquivo `font.ttf` na pasta `assets` do GitHub.", ephemeral=True)
+            return
 
         draw = ImageDraw.Draw(bg)
 
-        # Baixa e prepara o avatar
-        avatar_url = target_user.display_avatar.url
-        response = requests.get(avatar_url)
-        avatar_img = Image.open(BytesIO(response.content)).convert("RGBA")
-        avatar_img = avatar_img.resize((150, 150))
-        mask = Image.new('L', avatar_img.size, 0)
-        draw_mask = ImageDraw.Draw(mask)
-        draw_mask.ellipse((0, 0) + avatar_img.size, fill=255)
-        bg.paste(avatar_img, (50, 75), mask)
+        # Baixa e prepara o avatar do usuário
+        try:
+            avatar_url = target_user.display_avatar.url
+            response = requests.get(avatar_url)
+            response.raise_for_status()
+            avatar_img = Image.open(BytesIO(response.content)).convert("RGBA")
+            avatar_img = avatar_img.resize((150, 150))
+            mask = Image.new('L', avatar_img.size, 0)
+            draw_mask = ImageDraw.Draw(mask)
+            draw_mask.ellipse((0, 0) + avatar_img.size, fill=255)
+            bg.paste(avatar_img, (50, 75), mask)
+        except Exception as e:
+            print(f"Erro ao processar avatar: {e}")
 
-        # Escreve a CLASSIFICAÇÃO em destaque
+        # Desenha as informações no cartão
         draw.text((230, 80), f"#{user_rank}", font=font_rank, fill="#FFFFFF", stroke_width=2, stroke_fill="#000000")
-
-        # Escreve o NOME do usuário
         draw.text((230, 150), target_user.display_name, font=font_name, fill="#FFFFFF")
-
-        # Escreve o NÍVEL e o XP um pouco mais abaixo
         draw.text((230, 195), f"Nível: {level}", font=font_level, fill="#DDDDDD")
         draw.text((450, 195), f"XP: {xp} / {xp_para_proximo_level}", font=font_level, fill="#DDDDDD")
         
