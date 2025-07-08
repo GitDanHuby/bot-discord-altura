@@ -15,6 +15,7 @@ import random
 import time
 from datetime import datetime
 from yt_dlp import YoutubeDL
+from sqlalchemy import desc
 
 # --- Configuração Inicial ---
 load_dotenv()
@@ -337,81 +338,73 @@ async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
     await mensagem_enviada.add_reaction("👎")
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso!", ephemeral=True)
 
-# --- NOVO COMANDO /rank COM IMAGEM DINÂMICA (VERSÃO CORRIGIDA) ---
-from PIL import Image, ImageDraw, ImageFont
-import requests
-from io import BytesIO
-
+# --- COMANDO /rank ATUALIZADO E FINAL ---
 @tree.command(name="rank", description="Mostra seu cartão de rank personalizado.")
 @app_commands.describe(membro="Veja o rank de outro membro (opcional).")
 async def rank(interaction: discord.Interaction, membro: discord.Member = None):
-    await interaction.response.defer() # Adia a resposta para dar tempo de gerar a imagem
+    await interaction.response.defer()
     target_user = membro or interaction.user
 
     db = SessionLocal()
     try:
+        # Pega todos os usuários ordenados por XP para encontrar a classificação
+        all_users_ranked = db.query(User).order_by(desc(User.xp)).all()
+        
+        user_rank = -1
+        # Encontra a posição (rank) do usuário na lista
+        for i, user in enumerate(all_users_ranked):
+            if user.id == target_user.id:
+                user_rank = i + 1
+                break
+        
+        # Pega os dados específicos do usuário alvo
         user_data = db.query(User).filter(User.id == target_user.id).first()
-        if not user_data:
-            await interaction.followup.send(f"{target_user.name} ainda não tem XP.", ephemeral=True)
+        if not user_data or user_rank == -1:
+            await interaction.followup.send(f"{target_user.name} ainda não tem XP para ser classificado.", ephemeral=True)
             return
 
         level = user_data.level
         xp = user_data.xp
         xp_para_proximo_level = (5 * (level ** 2)) + (50 * level) + 100
-        
-        # Carrega a imagem de fundo
-        try:
-            bg = Image.open("assets/rank_bg.png").convert("RGBA")
-        except FileNotFoundError:
-            await interaction.followup.send("❌ Erro: Arquivo `rank_bg.png` não encontrado na pasta `assets`.", ephemeral=True)
-            return
 
-        # Carrega a fonte
-        try:
-            font_large = ImageFont.truetype("assets/font.ttf", 40)
-            font_medium = ImageFont.truetype("assets/font.ttf", 30)
-        except IOError:
-            await interaction.followup.send("❌ Erro: Arquivo `font.ttf` não encontrado na pasta `assets`.", ephemeral=True)
-            return
+        # Carrega a imagem de fundo e as fontes
+        bg = Image.open("assets/rank_bg.png").convert("RGBA")
+        font_rank = ImageFont.truetype("assets/font.ttf", 60)
+        font_level = ImageFont.truetype("assets/font.ttf", 30)
+        font_name = ImageFont.truetype("assets/font.ttf", 35)
+        font_xp = ImageFont.truetype("assets/font.ttf", 25)
 
         draw = ImageDraw.Draw(bg)
 
-        # Baixa e prepara o avatar do usuário
-        try:
-            avatar_url = target_user.display_avatar.url
-            response = requests.get(avatar_url)
-            response.raise_for_status() # Verifica se o download deu certo
-            avatar_img = Image.open(BytesIO(response.content)).convert("RGBA")
-            avatar_img = avatar_img.resize((150, 150))
-            
-            # Cria uma máscara circular para o avatar
-            mask = Image.new('L', avatar_img.size, 0)
-            draw_mask = ImageDraw.Draw(mask)
-            draw_mask.ellipse((0, 0) + avatar_img.size, fill=255)
-            
-            # Cola o avatar na imagem de fundo
-            bg.paste(avatar_img, (50, 75), mask)
-        except Exception as e:
-            print(f"Erro ao processar avatar: {e}")
-            # Se der erro no avatar, continua sem ele
+        # Baixa e prepara o avatar
+        avatar_url = target_user.display_avatar.url
+        response = requests.get(avatar_url)
+        avatar_img = Image.open(BytesIO(response.content)).convert("RGBA")
+        avatar_img = avatar_img.resize((150, 150))
+        mask = Image.new('L', avatar_img.size, 0)
+        draw_mask = ImageDraw.Draw(mask)
+        draw_mask.ellipse((0, 0) + avatar_img.size, fill=255)
+        bg.paste(avatar_img, (50, 75), mask)
 
-        # Escreve o nome do usuário
-        draw.text((230, 90), target_user.display_name, font=font_large, fill="#FFFFFF", stroke_width=1, stroke_fill="#000000")
-        
-        # Escreve Nível e XP
-        draw.text((230, 150), f"Nível: {level}", font=font_medium, fill="#DDDDDD")
-        draw.text((450, 150), f"XP: {xp} / {xp_para_proximo_level}", font=font_medium, fill="#DDDDDD")
+        # --- NOVO LAYOUT DO TEXTO ---
+        # Escreve a CLASSIFICAÇÃO em destaque
+        draw.text((230, 80), f"#{user_rank}", font=font_rank, fill="#FFFFFF", stroke_width=2, stroke_fill="#000000")
+
+        # Escreve o NOME do usuário
+        draw.text((230, 150), target_user.display_name, font=font_name, fill="#FFFFFF")
+
+        # Escreve o NÍVEL e o XP um pouco mais abaixo
+        draw.text((230, 195), f"Nível: {level}", font=font_level, fill="#DDDDDD")
+        draw.text((450, 195), f"XP: {xp} / {xp_para_proximo_level}", font=font_level, fill="#DDDDDD")
         
         # Desenha a barra de progresso
         if xp_para_proximo_level > 0:
             progresso_percentual = xp / xp_para_proximo_level
-            # Garante que a barra não passe de 100%
             if progresso_percentual > 1: progresso_percentual = 1
-            
-            draw.rectangle((230, 200, 750, 230), fill="#404040")
-            draw.rectangle((230, 200, 230 + (progresso_percentual * 520), 230), fill="#50fa7b")
+            draw.rectangle((50, 250, 750, 280), fill="#404040") # Barra de fundo
+            draw.rectangle((50, 250, 50 + (progresso_percentual * 700), 280), fill="#50fa7b") # Barra de progresso
 
-        # Salva a imagem em um buffer de memória
+        # Salva e envia a imagem
         final_buffer = BytesIO()
         bg.save(final_buffer, "PNG")
         final_buffer.seek(0)
