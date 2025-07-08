@@ -337,26 +337,74 @@ async def sugestao(interaction: discord.Interaction, texto_da_sugestao: str):
     await mensagem_enviada.add_reaction("👎")
     await interaction.response.send_message("✅ Sua sugestão foi enviada com sucesso!", ephemeral=True)
 
-@tree.command(name="rank", description="Mostra seu nível e XP no servidor.")
+# --- NOVO COMANDO /rank COM IMAGEM DINÂMICA ---
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import requests
+from io import BytesIO
+
+@tree.command(name="rank", description="Mostra seu cartão de rank personalizado.")
+@app_commands.describe(membro="Veja o rank de outro membro (opcional).")
 async def rank(interaction: discord.Interaction, membro: discord.Member = None):
+    await interaction.response.defer()
     target_user = membro or interaction.user
+
     db = SessionLocal()
     try:
         user_data = db.query(User).filter(User.id == target_user.id).first()
         if not user_data:
-            await interaction.response.send_message(f"{target_user.name} ainda não tem XP. Comece a conversar!", ephemeral=True)
+            await interaction.followup.send(f"{target_user.name} ainda não tem XP.", ephemeral=True)
             return
+
         level = user_data.level
         xp = user_data.xp
         xp_para_proximo_level = (5 * (level ** 2)) + (50 * level) + 100
-        embed_rank = discord.Embed(title=f"🏆 Rank de {target_user.name}", color=target_user.color)
-        embed_rank.set_thumbnail(url=target_user.display_avatar.url)
-        embed_rank.add_field(name="Nível", value=f"**{level}**", inline=True)
-        embed_rank.add_field(name="XP", value=f"**{xp} / {xp_para_proximo_level}**", inline=True)
-        progresso = int((xp / xp_para_proximo_level) * 20)
-        barra = "🟩" * progresso + "⬛" * (20 - progresso)
-        embed_rank.add_field(name="Progresso", value=barra, inline=False)
-        await interaction.response.send_message(embed=embed_rank)
+
+        # Carrega a imagem de fundo e a fonte
+        bg = Image.open("assets/rank_bg.png").convert("RGBA")
+        font_large = ImageFont.truetype("assets/font.ttf", 40)
+        font_medium = ImageFont.truetype("assets.font.ttf", 30)
+        font_small = ImageFont.truetype("assets/font.ttf", 20)
+
+        # Prepara para desenhar na imagem
+        draw = ImageDraw.Draw(bg)
+
+        # Baixa e prepara o avatar do usuário
+        avatar_url = target_user.display_avatar.url
+        response = requests.get(avatar_url)
+        avatar_img = Image.open(BytesIO(response.content)).convert("RGBA")
+        avatar_img = avatar_img.resize((150, 150))
+        
+        # Cria uma máscara circular para o avatar
+        mask = Image.new('L', avatar_img.size, 0)
+        draw_mask = ImageDraw.Draw(mask)
+        draw_mask.ellipse((0, 0) + avatar_img.size, fill=255)
+        
+        # Cola o avatar na imagem de fundo
+        bg.paste(avatar_img, (50, 75), mask)
+
+        # Escreve o nome do usuário
+        draw.text((230, 90), target_user.display_name, font=font_large, fill="#FFFFFF")
+        
+        # Escreve Nível e XP
+        draw.text((230, 150), f"Nível: {level}", font=font_medium, fill="#AAAAAA")
+        draw.text((400, 150), f"XP: {xp} / {xp_para_proximo_level}", font=font_medium, fill="#AAAAAA")
+        
+        # Desenha a barra de progresso
+        progresso_percentual = xp / xp_para_proximo_level
+        draw.rectangle((230, 200, 750, 230), fill="#404040")
+        draw.rectangle((230, 200, 230 + (progresso_percentual * 520), 230), fill="#50fa7b")
+
+        # Salva a imagem em um buffer de memória
+        final_buffer = BytesIO()
+        bg.save(final_buffer, "PNG")
+        final_buffer.seek(0)
+        
+        # Envia a imagem gerada
+        await interaction.followup.send(file=discord.File(fp=final_buffer, filename="rank.png"))
+
+    except Exception as e:
+        print(f"Erro ao gerar rank card: {e}")
+        await interaction.followup.send("Ocorreu um erro ao gerar seu cartão de rank.")
     finally:
         db.close()
 
