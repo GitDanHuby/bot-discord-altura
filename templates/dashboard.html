@@ -6,11 +6,6 @@
     <title>Painel - Altura RP City</title>
     <style>
         body { background-color: #1e1e2e; color: #f2f2f2; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; line-height: 1.6; }
-        /* ▼▼▼ ADICIONE ESTAS 4 LINHAS ABAIXO ▼▼▼ */
-        background-image: url('/static/fundo.jpeg');
-        background-size: cover;
-        background-position: center center;
-        background-attachment: fixed;
         .container { max-width: 900px; margin: auto; }
         .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #44475a; padding-bottom: 20px; margin-bottom: 20px; }
         img.avatar { border-radius: 50%; vertical-align: middle; margin-right: 15px; }
@@ -18,11 +13,17 @@
         h1, h2, h3 { color: #50fa7b; }
         textarea, input[type="text"] { width: 95%; background-color: #44475a; color: white; border: 1px solid #6272a4; border-radius: 5px; padding: 10px; font-size: 1em; margin-top: 5px; }
         button { background-color: #bd93f9; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 20px;}
+        hr { border-color: #44475a; margin: 30px 0; }
         .module { background-color: #282a36; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         .dashboard-layout { display: flex; flex-wrap: wrap; gap: 20px; }
         .main-column { flex: 2; min-width: 300px; }
         .side-column { flex: 1; min-width: 300px; }
-        .notification { position: fixed; top: 20px; right: 20px; background-color: #50fa7b; color: #282a36; padding: 15px; border-radius: 5px; font-weight: bold; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; vertical-align: middle; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #50fa7b; }
+        input:checked + .slider:before { transform: translateX(26px); }
     </style>
 </head>
 <body>
@@ -34,11 +35,19 @@
             </div>
             <a href="/logout" class="logout-btn">Sair</a>
         </div>
+
+        <div class="module" style="text-align: center;">
+            <a href="https://www.game-state.com/190.102.40.142:7887/">
+                <img src="https://www.game-state.com/190.102.40.142:7887/560x95_FFFFFF_FF9900_000000_000000.png" alt="Status do Servidor SA-MP" style="border:none; max-width:100%;" />
+            </a>
+        </div>
+
+        <hr>
         
         <h1>Painel de Controle</h1>
         <p>Configure os módulos e mensagens automáticas do seu bot.</p>
         
-        <form id="settings-form">
+        <form method="POST">
             <div class="dashboard-layout">
                 <div class="main-column">
                     <div class="module">
@@ -53,21 +62,28 @@
                 <div class="side-column">
                     <div class="module">
                         <h3>Módulos</h3>
-                        <input type="checkbox" name="xp_system_enabled" {{ 'checked' if settings.get('xp_system_enabled', 'true') == 'true' else '' }}>
-                        <label>Sistema de Níveis (XP)</label>
+                        <label>
+                          Sistema de Níveis (XP)
+                          <label class="switch">
+                            <input type="checkbox" name="xp_system_enabled" {{ 'checked' if settings.get('xp_system_enabled', 'true') != 'false' else '' }}>
+                            <span class="slider"></span>
+                          </label>
+                        </label>
                     </div>
                     <div class="module">
                         <h3>Configuração de IDs</h3>
-                        <label>Canal de Logs de Auditoria:</label>
+                        <label>Logs de Auditoria:</label>
                         <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
-                        <label>Canal de Logs de Voz:</label>
+                        <label>Logs de Voz:</label>
                         <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
-                        <label>Canal de Logs de Msgs Deletadas:</label>
+                        <label>Logs de Msgs Deletadas:</label>
                         <input type="text" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
-                        <label>Canal de Logs de Avisos:</label>
+                        <label>Logs de Avisos:</label>
                         <input type="text" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
-                        <label>Canal de Sugestões:</label>
+                        <label>Sugestões:</label>
                         <input type="text" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+                        <label>Logs de Tickets:</label>
+                        <input type="text" name="ticket_log_channel_id" value="{{ settings.get('ticket_log_channel_id', '') }}">
                     </div>
                 </div>
             </div>
@@ -85,4 +101,4 @@
         </form>
     </div>
 </body>
-                    </html>
+</html>
