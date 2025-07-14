@@ -170,12 +170,34 @@
                 </div>
                 <div class="module">
                     <h2>Configuração de IDs</h2>
-                    <label>Canal de Logs de Auditoria:</label> <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
-                    <label>Canal de Logs de Voz:</label> <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
-                    <label>... e todos os outros campos de ID</label>
+                    <label>Canal de Logs de Auditoria:</label>
+                    <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
+
+                    <label>Canal de Logs de Voz:</label>
+                    <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
+
+                    <label>Canal de Logs de Msgs Deletadas:</label>
+                    <input type="text" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
+
+                    <label>Canal de Logs de Avisos:</label>
+                    <input type="text" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
+
+                    <label>Canal de Sugestões:</label>
+                    <input type="text" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+
+                    <label>Canal de Logs de Tickets:</label>
+                    <input type="text" name="ticket_log_channel_id" value="{{ settings.get('ticket_log_channel_id', '') }}">
                 </div>
                  <div class="module">
                     <h3>Sistema de Parceria</h3>
+                     <label>ID do Cargo Gatilho:</label>
+                     <input type="text" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
+
+                     <label>ID do Canal de Anúncio:</label>
+                     <input type="text" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
+
+                     <label>ID do Cargo Ping:</label>
+                     <input type="text" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
                     </div>
             </div>
 
