@@ -377,8 +377,8 @@ async def redes_sociais(interaction: discord.Interaction):
 # --- COMANDO /status COM TIMEOUT AJUSTADO ---
 @tree.command(name="status", description="Verifica o status e informações do servidor.")
 async def status(interaction: discord.Interaction):
-    IP_DO_SERVIDOR = "179.127.16.157"
-    PORTA_DO_SERVIDOR = 29015
+    IP_DO_SERVIDOR = "190.102.40.142"
+    PORTA_DO_SERVIDOR = 7887
     
     await interaction.response.defer()
 
