@@ -374,18 +374,19 @@ async def redes_sociais(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed_redes)
 
 
-# Substitua seu comando /status antigo por este
+# --- COMANDO /status COM TIMEOUT AJUSTADO ---
 @tree.command(name="status", description="Verifica o status e informações do servidor.")
 async def status(interaction: discord.Interaction):
-    IP_DO_SERVIDOR = "190.102.40.142"
-    PORTA_DO_SERVIDOR = 7887
- 
+    IP_DO_SERVIDOR = "179.127.16.157"
+    PORTA_DO_SERVIDOR = 29015
+    
     await interaction.response.defer()
 
     try:
-        with SampClient(address=IP_DO_SERVIDOR, port=PORTA_DO_SERVIDOR) as samp_client:
+        # A MUDANÇA ESTÁ AQUI: adicionamos timeout=5 para esperar até 5 segundos
+        with SampClient(address=IP_DO_SERVIDOR, port=PORTA_DO_SERVIDOR, timeout=5) as samp_client:
             info = samp_client.get_server_info()
-        
+            
             description = (
                 f"**Status:**\n"
                 f"```ini\n[ ONLINE ]\n```\n"
@@ -393,9 +394,8 @@ async def status(interaction: discord.Interaction):
                 f"```ini\n[ {info.players} / {info.max_players} ]\n```\n"
                 f"**IP SA-MP:**\n"
                 f"```\n{IP_DO_SERVIDOR}:{PORTA_DO_SERVIDOR}\n```"
-
-            )        
-
+            )
+            
             embed = discord.Embed(
                 title=info.hostname,
                 description=description,
@@ -403,11 +403,9 @@ async def status(interaction: discord.Interaction):
                 timestamp=datetime.now()
             )
             embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
-            embed.set_footer(text="Atualizado a cada 1 minuto")     
-
-            # Passa o IP e a Porta para a View criar o link de conexão correto
+            embed.set_footer(text="Atualizado a cada 1 minuto")
+            
             await interaction.followup.send(embed=embed, view=StatusView(ip=IP_DO_SERVIDOR, porta=PORTA_DO_SERVIDOR))
-
 
     except Exception as e:
         print(f"Erro ao checar status do servidor: {e}")
