@@ -251,13 +251,72 @@ async def dashboard(interaction: discord.Interaction):
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong! 🏓")
 
-@tree.command(name="ip", description="Mostra o endereço de IP para se conectar ao servidor SAMP.")
+@tree.command(name="ip", description="Mostra o IP do servidor de SA-MP.")
 async def ip(interaction: discord.Interaction):
-    embed_ip = discord.Embed(title="🚀 Conecte-se ao Altura RolePlay City!", description="Use o IP abaixo para entrar na melhor cidade do SAMP!", color=discord.Color.blue())
-    embed_ip.add_field(name="Endereço do Servidor:", value="`179.127.16.157:29015`", inline=False)
-    embed_ip.set_footer(text="Clique no IP para copiar. Te vemos lá!")
-    await interaction.response.send_message(embed=embed_ip)
+    # Busca o IP salvo no banco de dados
+    server_ip = get_setting('server_ip')
+    
+    # Se nenhum IP estiver configurado, avisa o usuário
+    if not server_ip:
+        embed = discord.Embed(
+            title="⚠️ IP Não Configurado",
+            description="O IP do servidor ainda não foi definido. Use o comando `/setip` para configurar.",
+            color=discord.Color.orange()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
 
+    embed = discord.Embed(
+        title="🚀 Conecte-se ao Altura RP City!",
+        description=f"Use o IP abaixo para entrar na melhor cidade do SAMP!",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="Endereço do Servidor:", value=f"`{server_ip}`")
+    embed.set_footer(text="Clique no IP para copiar. Te vemos lá!")
+    
+    await interaction.response.send_message(embed=embed)
+    
+# --- NOVO COMANDO PARA CONFIGURAR O IP ---
+@tree.command(name="setip", description="Define ou atualiza o IP do servidor de SA-MP.")
+@app_commands.describe(novo_ip="O novo endereço do servidor (Ex: 123.45.67.89:7777)")
+@app_commands.checks.has_permissions(administrator=True) # Apenas administradores podem usar
+async def setip(interaction: discord.Interaction, novo_ip: str):
+    db = SessionLocal()
+    try:
+        # Procura pela configuração 'server_ip' no banco
+        setting = db.query(Setting).filter(Setting.key == 'server_ip').first()
+        
+        if setting:
+            # Se já existir, atualiza o valor
+            setting.value = novo_ip
+        else:
+            # Se não existir, cria uma nova
+            setting = Setting(key='server_ip', value=novo_ip)
+            db.add(setting)
+        
+        db.commit()
+        
+        embed = discord.Embed(
+            title="✅ Sucesso!",
+            description=f"O IP do servidor foi atualizado para:\n`{novo_ip}`",
+            color=discord.Color.green()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    except Exception as e:
+        db.rollback()
+        await interaction.response.send_message(f"❌ Ocorreu um erro ao salvar o IP: {e}", ephemeral=True)
+    finally:
+        db.close()
+
+# Tratador de erro para o comando /setip
+@setip.error
+async def setip_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message("❌ Você não tem permissão de administrador para usar este comando.", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"Ocorreu um erro inesperado: {error}", ephemeral=True)
+        
 @tree.command(name="regras", description="Mostra as regras principais do servidor.")
 async def regras(interaction: discord.Interaction):
     regras_texto = """
