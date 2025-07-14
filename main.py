@@ -178,16 +178,15 @@ class DashboardView(discord.ui.View):
         # Adiciona o botão que é um link
         self.add_item(discord.ui.Button(label="Acessar o Painel de Controle", style=discord.ButtonStyle.link, url=url, emoji="🚀"))
 
-# --- COMANDO /status ATUALIZADO PARA SA-MP ---
-
 # Crie esta classe de View perto das outras, no topo do seu arquivo
-class StatusView(discord.ui.View):
-    def __init__(self, ip, porta):
-        super().__init__(timeout=None)
-        # O botão de conexão agora usa o formato samp://
-        self.add_item(discord.ui.Button(label="Conectar no Servidor", style=discord.ButtonStyle.link, url=f"samp://{ip}:{porta}", emoji="🚀"))
-        self.add_item(discord.ui.Button(label="Instagram", style=discord.ButtonStyle.link, url="https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==", emoji="📸"))
 
+class StatusView(discord.ui.View):
+    def __init__(self, ip, porta_real):
+        super().__init__(timeout=None)
+        # O botão de conexão usa a porta REAL do seu jogo (7887)
+        self.add_item(discord.ui.Button(label="Conectar no Servidor", style=discord.ButtonStyle.link, url=f"samp://{ip}:{porta_real}", emoji="🚀"))
+        self.add_item(discord.ui.Button(label="Instagram", style=discord.ButtonStyle.link, url="https://www.instagram.com/snow_pr25?igsh=MTNsNnA2d2xlMG9jdA==", emoji="📸"))
+        
 
 # =================================================================================
 # --- SEÇÃO DE COMANDOS DE BARRA (/) ---
@@ -374,26 +373,40 @@ async def redes_sociais(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed_redes)
 
 
-# --- COMANDO /status COM TIMEOUT AJUSTADO ---
+# --- SUBSTITUA A CLASSE StatusView E O COMANDO /status ---
+
+
 @tree.command(name="status", description="Verifica o status e informações do servidor.")
 async def status(interaction: discord.Interaction):
-    IP_DO_SERVIDOR = "190.102.40.142"
-    PORTA_DO_SERVIDOR = 7887
+    # Busca o IP:PORTA salvo no banco de dados pelo /setip
+    server_address = get_setting('server_ip')
+    
+    if not server_address or ":" not in server_address:
+        await interaction.response.send_message("❌ O IP do servidor não foi configurado corretamente (use o formato IP:PORTA). Use `/setip`.", ephemeral=True)
+        return
+
+    # Separa o IP e a Porta Real
+    IP_DO_SERVIDOR, PORTA_REAL_STR = server_address.split(":")
+    PORTA_REAL = int(PORTA_REAL_STR)
+    
+    # Define a porta de QUERY que a sua host exige
+    PORTA_DE_QUERY = 7777
     
     await interaction.response.defer()
 
     try:
-        # A MUDANÇA ESTÁ AQUI: adicionamos timeout=5 para esperar até 5 segundos
-        with SampClient(address=IP_DO_SERVIDOR, port=PORTA_DO_SERVIDOR, timeout=5) as samp_client:
+        # USA A PORTA DE QUERY (7777) SÓ PARA A VERIFICAÇÃO
+        with SampClient(address=IP_DO_SERVIDOR, port=PORTA_DE_QUERY, timeout=5) as samp_client:
             info = samp_client.get_server_info()
             
+            # MOSTRA A PORTA REAL (7887) PARA OS JOGADORES
             description = (
                 f"**Status:**\n"
                 f"```ini\n[ ONLINE ]\n```\n"
                 f"**Jogadores:**\n"
                 f"```ini\n[ {info.players} / {info.max_players} ]\n```\n"
                 f"**IP SA-MP:**\n"
-                f"```\n{IP_DO_SERVIDOR}:{PORTA_DO_SERVIDOR}\n```"
+                f"```\n{IP_DO_SERVIDOR}:{PORTA_REAL}\n```" # Mostra a porta correta
             )
             
             embed = discord.Embed(
@@ -403,15 +416,16 @@ async def status(interaction: discord.Interaction):
                 timestamp=datetime.now()
             )
             embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
-            embed.set_footer(text="Atualizado a cada 1 minuto")
+            embed.set_footer(text="Status atualizado")
             
-            await interaction.followup.send(embed=embed, view=StatusView(ip=IP_DO_SERVIDOR, porta=PORTA_DO_SERVIDOR))
+            # O botão de conectar também usa a PORTA REAL
+            await interaction.followup.send(embed=embed, view=StatusView(ip=IP_DO_SERVIDOR, porta_real=PORTA_REAL))
 
     except Exception as e:
         print(f"Erro ao checar status do servidor: {e}")
         embed = discord.Embed(
             title="❌ Status do Servidor: OFFLINE",
-            description="Não foi possível conectar ao servidor. Tente novamente mais tarde.",
+            description=f"Não foi possível conectar ao servidor em `{IP_DO_SERVIDOR}:{PORTA_DE_QUERY}`. Verifique se o IP salvo está correto ou se a host liberou a porta `7777 UDP`.",
             color=discord.Color.red()
         )
         await interaction.followup.send(embed=embed)
