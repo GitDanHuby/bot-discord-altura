@@ -979,40 +979,48 @@ async def on_message(message):
 
 @client.event
 async def on_member_join(member):
-    welcome_channel = discord.utils.get(member.guild.text_channels, name='👏│ᴡᴇʟᴄᴏᴍᴇ')
+    welcome_channel_name = get_setting('welcome_channel_name') or '👏│ᴡᴇʟᴄᴏᴍᴇ'
+    welcome_channel = discord.utils.get(member.guild.text_channels, name=welcome_channel_name)
 
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
-        
-        db = SessionLocal()
-        try:
-            setting = db.query(Setting).filter(Setting.key == 'welcome_message').first()
-            if setting and setting.value:
-                welcome_text = setting.value
-            else:
-                welcome_text = f"Seja muito bem-vindo(a), {{member.mention}}, ao {{server_name}}! Configure a mensagem de boas-vindas no dashboard."
-        finally:
-            db.close()
 
-        description_text = welcome_text.format(member=member, server=guild, member_mention=member.mention, member_name=member.name, server_name=guild.name, server_member_count=member_count)
-        
+        # Busca as configurações do banco de dados
+        welcome_text = get_setting('welcome_message') or f"Seja muito bem-vindo(a), {{member.mention}}!"
+        gif_url = get_setting('welcome_gif_url') # <<< Pega a URL do GIF do banco de dados
+
+        description_text = welcome_text.format(
+            member=member, 
+            server=guild, 
+            member_mention=member.mention, 
+            member_name=member.name, 
+            server_name=guild.name, 
+            server_member_count=member_count
+        )
+
         embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(70, 130, 180))
+
+        # --- A MÁGICA ACONTECE AQUI ---
+        # Adiciona o GIF se um link foi configurado no dashboard
+        if gif_url:
+            embed.set_image(url=gif_url)
+
+        # O resto do código que monta o embed continua igual
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
         if member.avatar:
             embed.set_thumbnail(url=member.avatar.url)
+
         footer_text = "© Todos os direitos reservados do Altura RP City"
         if client.user.avatar:
             embed.set_footer(text=footer_text, icon_url=client.user.avatar.url)
         else:
             embed.set_footer(text=footer_text)
-            # --- ADICIONE ESTA LINHA ---
-        embed.set_image(url="https://cdn.discordapp.com/attachments/1394714190027030689/1394714259455475864/bem-vindo.gif?ex=6877d05f&is=68767edf&hm=5e181feb45400b610970ca71918d1d389c9e27d081eea9afb455fee7b78c8a0d&")
 
         await welcome_channel.send(embed=embed)
     else:
-        print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
+        print(f"Aviso: Canal de boas-vindas '{welcome_channel_name}' não encontrado.")
 
 @client.event
 async def on_member_update(before, after):
