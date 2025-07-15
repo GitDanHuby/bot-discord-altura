@@ -977,11 +977,10 @@ async def on_message(message):
     finally:
         db.close()
 
+# --- SUBSTITUA SUA FUNÇÃO on_member_join POR ESTA ---
 @client.event
 async def on_member_join(member):
-    # Esta função agora busca o texto E o link do GIF do banco de dados
-    
-    # Busca o nome do canal de boas-vindas no DB, ou usa um padrão
+    # Pega o nome do canal do banco de dados, ou usa um padrão
     welcome_channel_name = get_setting('welcome_channel_name') or '👏│ᴡᴇʟᴄᴏᴍᴇ'
     welcome_channel = discord.utils.get(member.guild.text_channels, name=welcome_channel_name)
 
@@ -989,9 +988,10 @@ async def on_member_join(member):
         guild = member.guild
         member_count = guild.member_count
         
-        # Busca as configurações do banco de dados
+        # --- LÓGICA CORRIGIDA AQUI ---
+        # Busca tanto o texto quanto a URL do GIF no banco de dados
         welcome_text = get_setting('welcome_message') or f"Seja muito bem-vindo(a), {{member.mention}}!"
-        gif_url = get_setting('welcome_gif_url') # Pega a URL do GIF
+        gif_url = get_setting('welcome_gif_url')
 
         # Formata o texto com as variáveis
         description_text = welcome_text.format(
@@ -1005,11 +1005,11 @@ async def on_member_join(member):
         
         embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(70, 130, 180))
         
-        # Adiciona o GIF se um link foi configurado no dashboard
+        # Adiciona o GIF se um link foi configurado e salvo no dashboard
         if gif_url:
             embed.set_image(url=gif_url)
 
-        # O resto do código que monta o embed continua igual
+        # Adiciona o resto das informações do embed
         if client.user.avatar:
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
         if member.avatar:
