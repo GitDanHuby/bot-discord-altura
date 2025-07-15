@@ -979,17 +979,21 @@ async def on_message(message):
 
 @client.event
 async def on_member_join(member):
+    # Esta função agora busca o texto E o link do GIF do banco de dados
+    
+    # Busca o nome do canal de boas-vindas no DB, ou usa um padrão
     welcome_channel_name = get_setting('welcome_channel_name') or '👏│ᴡᴇʟᴄᴏᴍᴇ'
     welcome_channel = discord.utils.get(member.guild.text_channels, name=welcome_channel_name)
 
     if welcome_channel:
         guild = member.guild
         member_count = guild.member_count
-
+        
         # Busca as configurações do banco de dados
         welcome_text = get_setting('welcome_message') or f"Seja muito bem-vindo(a), {{member.mention}}!"
-        gif_url = get_setting('welcome_gif_url') # <<< Pega a URL do GIF do banco de dados
+        gif_url = get_setting('welcome_gif_url') # Pega a URL do GIF
 
+        # Formata o texto com as variáveis
         description_text = welcome_text.format(
             member=member, 
             server=guild, 
@@ -998,10 +1002,9 @@ async def on_member_join(member):
             server_name=guild.name, 
             server_member_count=member_count
         )
-
+        
         embed = discord.Embed(description=description_text, color=discord.Color.from_rgb(70, 130, 180))
-
-        # --- A MÁGICA ACONTECE AQUI ---
+        
         # Adiciona o GIF se um link foi configurado no dashboard
         if gif_url:
             embed.set_image(url=gif_url)
@@ -1011,13 +1014,13 @@ async def on_member_join(member):
             embed.set_author(name=client.user.name, icon_url=client.user.avatar.url)
         if member.avatar:
             embed.set_thumbnail(url=member.avatar.url)
-
+        
         footer_text = "© Todos os direitos reservados do Altura RP City"
         if client.user.avatar:
             embed.set_footer(text=footer_text, icon_url=client.user.avatar.url)
         else:
             embed.set_footer(text=footer_text)
-
+            
         await welcome_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de boas-vindas '{welcome_channel_name}' não encontrado.")
