@@ -1,5 +1,5 @@
 # =================================================================================
-# ARQUIVO main.py DEFINITIVO FINAL - COM TUDO (INCLUINDO LOGS DE TICKET)
+# ARQUIVO main.py FEITO POR SNOW - COM TUDO (INCLUINDO LOGS DE TICKET)
 # =================================================================================
 
 # --- Seção de Imports ---
