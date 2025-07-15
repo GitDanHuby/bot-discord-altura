@@ -205,12 +205,18 @@
                 <h2>Mensagens Customizáveis</h2>
                 <div class="module">
                     <label for="welcome_message">Mensagem de Boas-Vindas:</label>
+                    <p><small>Use {member.mention}, {server.name}, etc.</small></p>
                     <textarea name="welcome_message" rows="5">{{ settings.get('welcome_message', '') }}</textarea>
+                    
                     <br><br>
-                    <label for="welcome_gif">https://cdn.discordapp.com/attachments/1394714190027030689/1394714259455475864/bem-vindo.gif?ex=6877d05f&is=68767edf&hm=5e181feb45400b610970ca71918d1d389c9e27d081eea9afb455fee7b78c8a0d&:</label>
-                    <input type="text" name="welcome_gif_url" value="{{ settings.get('welcome_gif_url', '') }}">
+                    
+                    <label for="welcome_gif_url">URL do GIF de Boas-Vindas (Opcional):</label>
+                    <input type="text" id="welcome_gif_url" name="welcome_gif_url" value="{{ settings.get('welcome_gif_url', 'https://cdn.discordapp.com/attachments/1394714190027030689/1394714259455475864/bem-vindo.gif?ex=6877d05f&is=68767edf&hm=5e181feb45400b610970ca71918d1d389c9e27d081eea9afb455fee7b78c8a0d&') }}">
+                    
                     <br><br>
+                    
                     <label for="goodbye_message">Mensagem de Despedida:</label>
+                    <p><small>Use {member.name}, {server.name}, etc.</small></p>
                     <textarea name="goodbye_message" rows="5">{{ settings.get('goodbye_message', '') }}</textarea>
                 </div>
             </div>
