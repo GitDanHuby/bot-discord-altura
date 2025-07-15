@@ -1007,6 +1007,9 @@ async def on_member_join(member):
             embed.set_footer(text=footer_text, icon_url=client.user.avatar.url)
         else:
             embed.set_footer(text=footer_text)
+            # --- ADICIONE ESTA LINHA ---
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1394714190027030689/1394714259455475864/bem-vindo.gif?ex=6877d05f&is=68767edf&hm=5e181feb45400b610970ca71918d1d389c9e27d081eea9afb455fee7b78c8a0d&")
+
         await welcome_channel.send(embed=embed)
     else:
         print(f"Aviso: Canal de boas-vindas não encontrado no servidor '{member.guild.name}'.")
