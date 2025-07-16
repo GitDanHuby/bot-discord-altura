@@ -303,25 +303,33 @@ input, textarea {
         <input type="text" name="personal_command">
         <label>Resposta:</label>
         <textarea name="personal_response"></textarea>
-        <!-- CÓDIGO INICIAL MANTIDO ACIMA --><!-- Inserindo conteúdo preenchível nas abas do TOPO que estavam vazias --><div class="tab-content module" id="suporte">
+        <!-- CÓDIGO COMPLETO COM TODAS AS ABAS PREENCHIDAS --><!-- ... código anterior mantido ... -->
+        <!-- ABA SUPORTE -->
+      <div class="tab-content module" id="suporte">
         <h2>Suporte</h2>
         <label>Canal de Suporte:</label>
         <input type="text" name="support_channel">
-        <label>Mensagem Automática:</label>
+        <label>Mensagem Automática de Boas-Vindas:</label>
         <textarea name="support_message"></textarea>
-      </div><div class="tab-content module" id="daily">
-        <h2>Daily</h2>
-        <label>Valor da Recompensa Diária:</label>
+        <label>Tempo Estimado de Resposta:</label>
+        <input type="text" name="support_eta">
+      </div><!-- ABA DAILY --><div class="tab-content module" id="daily">
+        <h2>Recompensa Diária</h2>
+        <label>Valor da Recompensa:</label>
         <input type="number" name="daily_reward">
-        <label>Canal de Notificação:</label>
+        <label>Mensagem de Entrega:</label>
+        <textarea name="daily_message"></textarea>
+        <label>Canal de Recompensa:</label>
         <input type="text" name="daily_channel">
-      </div><div class="tab-content module" id="wiki">
-        <h2>Wiki</h2>
-        <label>Link da Wiki:</label>
+      </div><!-- ABA WIKI --><div class="tab-content module" id="wiki">
+        <h2>Central de Ajuda (Wiki)</h2>
+        <label>URL da Wiki:</label>
         <input type="text" name="wiki_link">
-        <label>Mostrar Dicas no Painel:</label>
+        <label>Texto de Ajuda no Painel:</label>
+        <textarea name="wiki_text"></textarea>
+        <label>Exibir Dicas no Painel:</label>
         <input type="checkbox" name="wiki_tips_enabled">
-      </div><!-- CÓDIGO FINAL MANTIDO ABAIXO -->
+      </div><!-- ... restante do código continua com o botão de salvar e scripts ... -->
       </div><button type="submit">Salvar Configurações</button>
 </form>
 
