@@ -941,20 +941,35 @@ async def leaderboard(interaction: discord.Interaction):
 async def change_status():
     new_activity = next(status_list)
     await client.change_presence(activity=new_activity)
-    
+
+async def set_custom_status():
+    payload = {
+        "op": 3,
+        "d": {
+            "since": 0,
+            "activities": [
+                {
+                    "type": 4,  # Custom Status
+                    "state": "🚓 patrulhando Altura RP"
+                }
+            ],
+            "status": "online",
+            "afk": False
+        }
+    }
+
+    await client.ws.send(payload)
 
 @client.event
 async def on_ready():
-    # Adiciona as views persistentes para que os botões funcionem depois de reiniciar
     client.add_view(TicketView())
     client.add_view(CloseTicketView())
     
-    # Sincroniza os comandos de barra com o Discord
     await tree.sync()
     print("Comandos de barra sincronizados.")
     
-    # --- LÓGICA DO STATUS ROTATIVO ---
-    # Inicia a tarefa de mudar o status se ela não estiver rodando
+    await set_custom_status()  # ✅ Isso define a bolha de fala do lado
+    
     if not change_status.is_running():
         change_status.start()
     
