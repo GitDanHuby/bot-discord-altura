@@ -188,55 +188,122 @@ input, textarea {
     </div>
   </header>  <main>
     <form id="settings-form">
-      <div id="config-gerais" class="tab-content active module">
+      <!-- ABA AUTOMÁTICA COM TODOS OS CAMPOS PADRÕES ADICIONADOS -->
+      <div class="tab-content active module" id="config-gerais">
         <h2>Configurações Gerais</h2>
-        <label for="prefixo">Prefixo:</label>
-        <input type="text" id="prefixo" name="prefixo" value="{{ settings.get('prefixo', '+') }}">
-      </div><div id="moderacao" class="tab-content module">
-    <h2>Moderação</h2>
-    <label for="log_channel">Canal de Logs:</label>
-    <input type="text" id="log_channel" name="log_channel" value="{{ settings.get('log_channel', '') }}">
-  </div>
-
-  <div id="comandos" class="tab-content module">
-    <h2>Comandos</h2>
-    <label for="comando_bloqueado">Comando bloqueado:</label>
-    <input type="text" id="comando_bloqueado" name="comando_bloqueado">
-  </div>
-
-  <div id="permissoes" class="tab-content module">
-    <h2>Permissões</h2>
-    <label for="cargo_admin">Cargo de Admin:</label>
-    <input type="text" id="cargo_admin" name="cargo_admin">
-  </div>
-
-  <div id="youtube" class="tab-content module">
-    <h2>Configurações do YouTube</h2>
-    <label for="canal_youtube">Canal de YouTube:</label>
-    <input type="text" id="canal_youtube" name="canal_youtube">
-  </div>
-
-  <div id="xp" class="tab-content module">
-    <h2>Sistema de XP</h2>
-    <label for="xp_ativo">Ativar Sistema de XP?</label>
-    <input type="checkbox" id="xp_ativo" name="xp_ativo">
-  </div>
-
-  <div id="premium" class="tab-content module">
-    <h2>Chaves Premium</h2>
-    <label for="premium_key">Chave Premium:</label>
-    <input type="text" id="premium_key" name="premium_key">
-  </div>
-
-  <div id="comandosperso" class="tab-content module">
-    <h2>Comandos Personalizados</h2>
-    <label for="cmd_custom">Comando Customizado:</label>
-    <input type="text" id="cmd_custom" name="cmd_custom">
-    <label for="resposta_custom">Resposta:</label>
-    <textarea id="resposta_custom" name="resposta_custom"></textarea>
-  </div>
-
-  <button type="submit">Salvar Configurações</button>
+        <label>Prefixo:</label>
+        <input type="text" name="prefixo">
+      </div>
+      <div class="tab-content module" id="moderacao">
+        <h2>Moderação</h2>
+        <label>Canal de Logs:</label>
+        <input type="text" name="log_channel">
+        <label>Cargo Mutado:</label>
+        <input type="text" name="muted_role">
+      </div>
+      <div class="tab-content module" id="comandos">
+        <h2>Comandos</h2>
+        <label>Comando Personalizado:</label>
+        <input type="text" name="custom_command">
+        <label>Resposta:</label>
+        <textarea name="custom_response"></textarea>
+      </div>
+      <div class="tab-content module" id="permissoes">
+        <h2>Permissões</h2>
+        <label>Cargo Admin:</label>
+        <input type="text" name="admin_role">
+        <label>Cargo Gerente:</label>
+        <input type="text" name="manager_role">
+      </div>
+      <div class="tab-content module" id="gamersafer">
+        <h2>GamerSafer</h2>
+        <label>ID do Canal GamerSafer:</label>
+        <input type="text" name="gamersafer_channel">
+      </div>
+      <div class="tab-content module" id="entrar">
+        <h2>Entrar/Sair</h2>
+        <label>Mensagem de Boas-Vindas:</label>
+        <textarea name="welcome_message"></textarea>
+        <label>Mensagem de Saída:</label>
+        <textarea name="leave_message"></textarea>
+      </div>
+      <div class="tab-content module" id="youtube">
+        <h2>YouTube</h2>
+        <label>Canal de Notificação:</label>
+        <input type="text" name="youtube_channel">
+      </div>
+      <div class="tab-content module" id="twitch">
+        <h2>Twitch</h2>
+        <label>Canal de Notificação:</label>
+        <input type="text" name="twitch_channel">
+      </div>
+      <div class="tab-content module" id="bluesky">
+        <h2>Bluesky</h2>
+        <label>Token API:</label>
+        <input type="text" name="bluesky_token">
+      </div>
+      <div class="tab-content module" id="loja">
+        <h2>Loja Diária</h2>
+        <label>Horário de Reset:</label>
+        <input type="text" name="loja_reset">
+      </div>
+      <div class="tab-content module" id="xp">
+        <h2>Sistema de XP</h2>
+        <label>Ativar XP:</label>
+        <input type="checkbox" name="xp_enabled">
+      </div>
+      <div class="tab-content module" id="autorele">
+        <h2>Autorele</h2>
+        <label>Cargo Padrão:</label>
+        <input type="text" name="default_role">
+      </div>
+      <div class="tab-content module" id="bloqconvite">
+        <h2>Bloqueador de Convites</h2>
+        <label>Ativar sistema:</label>
+        <input type="checkbox" name="block_invite">
+      </div>
+      <div class="tab-content module" id="contador">
+        <h2>Contador de Membros</h2>
+        <label>Formato da Mensagem:</label>
+        <input type="text" name="contador_format">
+      </div>
+      <div class="tab-content module" id="eventos">
+        <h2>Eventos</h2>
+        <label>Canal de Eventos:</label>
+        <input type="text" name="event_channel">
+      </div>
+      <div class="tab-content module" id="reacoes">
+        <h2>Reações da Comunidade</h2>
+        <label>Canal:</label>
+        <input type="text" name="reaction_channel">
+      </div>
+      <div class="tab-content module" id="auditoria">
+        <h2>Registro de Auditoria</h2>
+        <label>Canal de Registro:</label>
+        <input type="text" name="audit_channel">
+      </div>
+      <div class="tab-content module" id="premium">
+        <h2>Chave Premium</h2>
+        <label>Insira a Chave:</label>
+        <input type="text" name="premium_key">
+      </div>
+      <div class="tab-content module" id="emblemas">
+        <h2>Emblemas</h2>
+        <label>Nome do Emblema:</label>
+        <input type="text" name="badge_name">
+      </div>
+      <div class="tab-content module" id="multiplicador">
+        <h2>Multiplicador de XP</h2>
+        <label>Multiplicador:</label>
+        <input type="number" step="0.1" name="xp_multiplier">
+      </div>
+      <div class="tab-content module" id="comandosperso">
+        <h2>Comandos Personalizados</h2>
+        <label>Comando:</label>
+        <input type="text" name="personal_command">
+        <label>Resposta:</label>
+        <textarea name="personal_response"></textarea>
+      </div><button type="submit">Salvar Configurações</button>
 </form>
 
   </main>  <script>
