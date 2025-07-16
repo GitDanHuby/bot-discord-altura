@@ -1,249 +1,246 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel - Altura RP City</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
-        :root {
-            --cor-fundo-principal: #16181D;
-            --cor-fundo-secundario: #1F2128;
-            --cor-superficie: #282a36;
-            --cor-borda: #44475a;
-            --cor-texto-principal: #f8f8f2;
-            --cor-texto-secundario: #a8a8b3;
-            --cor-destaque: #50fa7b;
-            --cor-primaria: #bd93f9;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel - Altura RP City</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');:root {
+  --bg: #16181D;
+  --sidebar: #1F2128;
+  --card: #282a36;
+  --borda: #44475a;
+  --texto: #f8f8f2;
+  --texto-fraco: #a8a8b3;
+  --verde: #50fa7b;
+  --roxo: #bd93f9;
+  --vermelho: #ff5555;
+}
 
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--cor-fundo-principal);
-            color: var(--cor-texto-principal);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        /* --- Barra Lateral de Navegação --- */
-        .sidebar {
-            width: 250px;
-            background-color: var(--cor-fundo-secundario);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--cor-borda);
-            position: fixed;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .sidebar .profile {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--cor-borda);
-        }
-        .sidebar .profile img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid var(--cor-primaria);
-        }
-        .sidebar .profile h3 {
-            margin: 10px 0 0;
-            color: var(--cor-texto-principal);
-            font-size: 1.1em;
-        }
-        .sidebar nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .sidebar nav li a {
-            display: block;
-            padding: 13px 20px;
-            text-decoration: none;
-            color: var(--cor-texto-secundario);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-weight: 600;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .sidebar nav li a:hover, .sidebar nav li a.active {
-            background-color: var(--cor-primaria);
-            color: #FFFFFF;
-        }
-        .sidebar .logout-btn {
-            margin-top: auto;
-            background-color: #ff5555;
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-        }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--texto);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-        /* --- Conteúdo Principal --- */
-        .main-content {
-            margin-left: 250px; /* Espaço para a sidebar fixa */
-            flex-grow: 1;
-            padding: 40px;
-            overflow-y: auto;
-            height: 100vh;
-            box-sizing: border-box;
-        }
-        .page-content {
-            display: none;
-        }
-        .page-content.active {
-            display: block;
-        }
-        .module {
-            background-color: var(--cor-superficie);
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-        h1, h2 {
-            border-bottom: 1px solid var(--cor-borda);
-            padding-bottom: 10px;
-            color: var(--cor-destaque);
-        }
-        label { display: block; margin-top: 15px; font-weight: 600; }
-        textarea, input[type="text"] {
-            width: 95%;
-            background-color: var(--cor-fundo-principal);
-            color: var(--cor-texto-principal);
-            border: 1px solid var(--cor-borda);
-            border-radius: 5px;
-            padding: 12px;
-            font-size: 1em;
-            margin-top: 8px;
-        }
-        button[type="submit"] {
-            background: var(--cor-primaria);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .notification { position: fixed; top: 20px; right: 20px; background-color: #50fa7b; color: #282a36; padding: 15px; border-radius: 5px; font-weight: bold; z-index: 1000; }
-    </style>
+aside.sidebar {
+  width: 250px;
+  background: var(--sidebar);
+  padding: 20px;
+  border-right: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+}
+
+nav ul {
+  list-style: none;
+  width: 100%;
+}
+
+nav ul li a {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--texto-fraco);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+  background: var(--roxo);
+  color: #fff;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background: var(--vermelho);
+  color: white;
+  padding: 12px;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+header.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--borda);
+}
+
+.top-bar .profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-bar .profile img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--roxo);
+}
+
+.top-bar .profile span {
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  padding: 0 40px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--borda);
+}
+
+.tabs button {
+  background: none;
+  border: none;
+  color: var(--texto-fraco);
+  font-weight: 600;
+  font-size: 1em;
+  margin-right: 20px;
+  padding: 16px 0;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  color: var(--verde);
+  border-bottom: 2px solid var(--verde);
+}
+
+.content {
+  padding: 40px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.card {
+  background: var(--card);
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: var(--verde);
+  font-size: 1.4em;
+  border-bottom: 1px solid var(--borda);
+  padding-bottom: 10px;
+}
+
+  </style>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="profile">
-            <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar">
-            <h3>{{ user.username }}</h3>
+  <aside class="sidebar">
+    <img src="https://cdn.discordapp.com/icons/1143964074134124544/34122ebcf9d93b1a002c71cf5f79a5d7.png?size=128" class="logo" alt="Logo Altura RP">
+    <nav>
+      <ul>
+        <li><a href="#" class="tab-link active" data-tab="geral">⚙️ Geral</a></li>
+        <li><a href="#" class="tab-link" data-tab="comandos">📜 Comandos</a></li>
+        <li><a href="#" class="tab-link" data-tab="permissoes">🔐 Permissões</a></li>
+        <li><a href="#" class="tab-link" data-tab="notificacoes">🔔 Notificações</a></li>
+      </ul>
+    </nav>
+    <a href="/logout" class="logout-btn">Sair</a>
+  </aside>
+  <main>
+    <header class="top-bar">
+      <h1>Altura RP City</h1>
+      <div class="profile">
+        <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar do Usuário">
+        <span>{{ user.username }}</span>
+      </div>
+    </header>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="geral">Geral</button>
+      <button class="tab-btn" data-tab="comandos">Comandos</button>
+      <button class="tab-btn" data-tab="permissoes">Permissões</button>
+      <button class="tab-btn" data-tab="notificacoes">Notificações</button>
+    </div>
+    <div class="content">
+      <div id="geral" class="page active">
+        <div class="card">
+          <h2>Configurações Gerais</h2>
+          <p>Aqui você poderá ativar ou desativar sistemas do Altura RP City.</p>
         </div>
-        <nav>
-            <ul>
-                <li><a href="#" class="nav-link active" data-target="geral">⚙️ Configurações Gerais</a></li>
-                <li><a href="#" class="nav-link" data-target="mensagens">✉️ Mensagens</a></li>
-            </ul>
-        </nav>
-        <a href="/logout" class="logout-btn">Sair</a>
-    </aside>
+      </div>
+      <div id="comandos" class="page">
+        <div class="card">
+          <h2>Lista de Comandos</h2>
+          <p>Visualize ou edite comandos personalizados.</p>
+        </div>
+      </div>
+      <div id="permissoes" class="page">
+        <div class="card">
+          <h2>Permissões</h2>
+          <p>Defina quem pode usar o painel e comandos específicos.</p>
+        </div>
+      </div>
+      <div id="notificacoes" class="page">
+        <div class="card">
+          <h2>Notificações</h2>
+          <p>Configure avisos automáticos no servidor.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    const tabLinks = document.querySelectorAll('.tab-link');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const pages = document.querySelectorAll('.page');function openTab(tabId) {
+  pages.forEach(p => p.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
 
-    <main class="main-content">
-        <form id="settings-form">
-            <h1>Painel de Controle</h1>
-            
-            <div class="module" style="text-align: center; padding: 15px;">
-                <a href="https://www.game-state.com/190.102.40.142:7887/">
-                    <img src="https://www.game-state.com/190.102.40.142:7887/560x95_FFFFFF_FF9900_000000_000000.png" alt="Status do Servidor SA-MP" style="border:none; max-width:100%;" />
-                </a>
-            </div>
+  tabLinks.forEach(l => l.classList.remove('active'));
+  tabBtns.forEach(b => b.classList.remove('active'));
 
-            <div id="geral" class="page-content active">
-                <div class="module">
-                    <h2>Módulos</h2>
-                    <input type="checkbox" name="xp_system_enabled" id="xp-toggle" {{ 'checked' if settings.get('xp_system_enabled', 'true') != 'false' else '' }}>
-                    <label for="xp-toggle" style="display: inline-block;">Sistema de Níveis (XP)</label>
-                </div>
-                <div class="module">
-                    <h2>Configuração de IDs</h2>
-                    <label>Canal de Logs de Auditoria:</label>
-                    <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
+  document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(el => el.classList.add('active'));
+}
 
-                    <label>Canal de Logs de Voz:</label>
-                    <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
+[...tabLinks, ...tabBtns].forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    openTab(btn.dataset.tab);
+  });
+});
 
-                    <label>Canal de Logs de Msgs Deletadas:</label>
-                    <input type="text" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
-
-                    <label>Canal de Logs de Avisos:</label>
-                    <input type="text" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
-
-                    <label>Canal de Sugestões:</label>
-                    <input type="text" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
-
-                    <label>Canal de Logs de Tickets:</label>
-                    <input type="text" name="ticket_log_channel_id" value="{{ settings.get('ticket_log_channel_id', '') }}">
-                </div>
-                 <div class="module">
-                    <h3>Sistema de Parceria</h3>
-                     <label>ID do Cargo Gatilho:</label>
-                     <input type="text" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
-
-                     <label>ID do Canal de Anúncio:</label>
-                     <input type="text" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
-
-                     <label>ID do Cargo Ping:</label>
-                     <input type="text" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
-                    </div>
-            </div>
-
-            <div id="mensagens" class="page-content">
-                <h2>Mensagens Customizáveis</h2>
-                <div class="module">
-                    <label for="welcome_message">Mensagem de Boas-Vindas:</label>
-                    <p><small>Use {member.mention}, {server.name}, etc.</small></p>
-                    <textarea name="welcome_message" rows="5">{{ settings.get('welcome_message', '') }}</textarea>
-                    
-                    <br><br>
-                    
-                    <label for="welcome_gif_url">URL do GIF de Boas-Vindas (Opcional):</label>
-                    <input type="text" id="welcome_gif_url" name="welcome_gif_url" value="{{ settings.get('welcome_gif_url', 'https://cdn.discordapp.com/attachments/1394714190027030689/1394714259455475864/bem-vindo.gif?ex=6877d05f&is=68767edf&hm=5e181feb45400b610970ca71918d1d389c9e27d081eea9afb455fee7b78c8a0d&') }}">
-                    
-                    <br><br>
-                    
-                    <label for="goodbye_message">Mensagem de Despedida:</label>
-                    <p><small>Use {member.name}, {server.name}, etc.</small></p>
-                    <textarea name="goodbye_message" rows="5">{{ settings.get('goodbye_message', '') }}</textarea>
-                </div>
-            </div>
-            
-            <button type="submit">Salvar Todas as Configurações</button>
-        </form>
-    </main>
-
-    <script>
-        // Script para a navegação por abas
-        const navLinks = document.querySelectorAll('.nav-link');
-        const pages = document.querySelectorAll('.page-content');
-
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                navLinks.forEach(l => l.classList.remove('active'));
-                pages.forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
-                document.getElementById(this.dataset.target).classList.add('active');
-            });
-        });
-
-        // Script para salvar o formulário que já tínhamos
-        document.getElementById('settings-form').addEventListener('submit', function(event) {
-            // ... (o script de salvar continua aqui, sem alterações) ...
-        });
-    </script>
+  </script>
 </body>
 </html>
