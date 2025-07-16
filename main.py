@@ -16,6 +16,8 @@ import time
 from datetime import datetime
 from yt_dlp import YoutubeDL
 from sqlalchemy import desc
+from discord.ext import tasks
+from itertools import cycle
 
 # --- Configuração Inicial ---
 load_dotenv()
@@ -33,6 +35,14 @@ tree = app_commands.CommandTree(client)
 xp_cooldowns = {}
 music_queues = {}
 voice_join_times = {} # <--- ADICIONE ESTA LINHA
+
+# Lista de status que ficarão em loop
+status_list = cycle([
+    discord.Game(name="na cidade do Altura RP City"),
+    discord.Activity(type=discord.ActivityType.watching, name="as ruas da cidade 🚓"),
+    discord.Activity(type=discord.ActivityType.listening, name="à Rádio Los Santos"),
+    discord.Game(name="com o /ip no máximo!")
+])
 
 # --- FUNÇÃO AUXILIAR PARA PEGAR CONFIGURAÇÕES DO DB ---
 def get_setting(key):
@@ -925,6 +935,12 @@ async def leaderboard(interaction: discord.Interaction):
 # --- SEÇÃO DE EVENTOS DO DISCORD ---
 # =================================================================================
 
+# Tarefa que roda em loop para mudar o status a cada 60 segundos
+@tasks.loop(seconds=60)
+async def change_status():
+    new_activity = next(status_list)
+    await client.change_presence(activity=new_activity)
+
 @client.event
 async def on_ready():
     # Adiciona as views persistentes para que os botões funcionem depois de reiniciar
@@ -935,22 +951,14 @@ async def on_ready():
     await tree.sync()
     print("Comandos de barra sincronizados.")
     
-    # --- NOVO STATUS PERSONALIZADO ---
-    # Usamos discord.Activity para poder adicionar um emoji
-    activity = discord.Activity(
-        type=discord.ActivityType.custom,
-        name="Patrulhando Altura RP", # O texto que você quer
-        state="🚓"  # O emoji da polícia
-    )
-    
-    # Define a nova presença do bot
-    await client.change_presence(status=discord.Status.online, activity=activity)
+    # --- LÓGICA DO STATUS ROTATIVO ---
+    # Inicia a tarefa de mudar o status se ela não estiver rodando
+    if not change_status.is_running():
+        change_status.start()
     
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
-    # Log para confirmar o novo status
-    print(f'Status do bot definido para: {activity.state} {activity.name}')
-
+    
 # DENTRO DO main.py, SUBSTITUA APENAS ESTA FUNÇÃO
 @client.event
 async def on_message(message):
