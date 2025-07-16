@@ -927,14 +927,29 @@ async def leaderboard(interaction: discord.Interaction):
 
 @client.event
 async def on_ready():
+    # Adiciona as views persistentes para que os botões funcionem depois de reiniciar
     client.add_view(TicketView())
     client.add_view(CloseTicketView())
+    
+    # Sincroniza os comandos de barra com o Discord
     await tree.sync()
     print("Comandos de barra sincronizados.")
-    activity = discord.Game(name="na cidade do Altura RP City")
+    
+    # --- NOVO STATUS PERSONALIZADO ---
+    # Usamos discord.Activity para poder adicionar um emoji
+    activity = discord.Activity(
+        type=discord.ActivityType.custom,
+        name="Patrulhando Altura RP", # O texto que você quer
+        state="🚓"  # O emoji da polícia
+    )
+    
+    # Define a nova presença do bot
     await client.change_presence(status=discord.Status.online, activity=activity)
+    
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
+    # Log para confirmar o novo status
+    print(f'Status do bot definido para: {activity.state} {activity.name}')
 
 # DENTRO DO main.py, SUBSTITUA APENAS ESTA FUNÇÃO
 @client.event
