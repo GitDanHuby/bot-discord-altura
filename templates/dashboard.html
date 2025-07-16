@@ -240,11 +240,76 @@ input, textarea {
   </div>
       </div>
       <div class="tab-content module" id="moderacao">
-        <h2>Moderação</h2>
-        <label>Canal de Logs:</label>
-        <input type="text" name="log_channel">
-        <label>Cargo Mutado:</label>
-        <input type="text" name="muted_role">
+  <h2>Moderação</h2>
+
+  <!-- Enviar punição via DM -->
+  <div class="form-group">
+    <label for="punicaoDm">Enviar punição via mensagem direta?</label>
+    <p>Quando o usuário for punido, ele receberá uma mensagem direta (caso esteja ativado) com o motivo da punição.</p>
+    <input type="checkbox" id="punicaoDm">
+  </div>
+
+  <!-- Enviar punição em canal -->
+  <div class="form-group">
+    <label for="punicaoCanal">Enviar punição para um canal de punições?</label>
+    <p>Quando o usuário for punido, uma mensagem será enviada em um canal mostrando o motivo da punição.</p>
+    <input type="checkbox" id="punicaoCanal" checked>
+  </div>
+
+  <!-- Canal de punições -->
+  <div class="form-group">
+    <label for="canalPunicao">Canal de punições</label>
+    <select id="canalPunicao" class="form-control">
+      <option>#🚫┃ADVERTÊNCIAS</option>
+      <option>#🔨┃PUNIÇÕES</option>
+      <option>#logs</option>
+    </select>
+  </div>
+
+  <!-- Mensagem padrão de punição -->
+  <div class="form-group">
+    <label for="mensagemPunicao">Mensagem que será mostrada ao ser punido</label>
+    <textarea id="mensagemPunicao" class="form-control" rows="3">@user você foi punido(a) por violar as regras.</textarea>
+    <button class="btn btn-sm">🛠 Editor Avançado</button>
+    <button class="btn btn-sm">🧪 Testar Mensagem</button>
+    <p><small>Quais são as variáveis/placeholders que eu posso usar?</small></p>
+  </div>
+
+  <hr>
+
+  <!-- Mensagens específicas -->
+  <div class="form-group">
+    <h3>Mensagens específicas para cada punição</h3>
+    <p>Você pode escolher mensagens diferentes para cada tipo de punição, assim colocando o seu charme em cada tipo de punição!</p>
+    
+    <div class="inline-form">
+      <select id="tipoPunicao" class="form-control">
+        <option>Banido</option>
+        <option>Advertido</option>
+        <option>Kickado</option>
+      </select>
+      <button class="btn">Adicionar</button>
+    </div>
+  </div>
+
+  <!-- Campo mensagem específica -->
+  <div class="form-group">
+    <label for="mensagemBanido">Mensagem que será mostrada ao ser Banido</label>
+    <textarea id="mensagemBanido" class="form-control" rows="3">@user você foi banido permanentemente do servidor.</textarea>
+    <button class="btn btn-sm">🛠 Editor Avançado</button>
+    <p><small>Quais são as variáveis/placeholders que eu posso usar?</small></p>
+  </div>
+
+  <!-- Campo de avisos -->
+  <div class="form-group">
+    <label>AVISOS</label>
+    <button class="btn btn-sm">➕</button>
+  </div>
+
+  <!-- Botão salvar -->
+  <div class="form-group">
+    <button class="btn btn-success">Salvar</button>
+  </div>
       </div>
       <div class="tab-content module" id="comandos">
         <h2>Comandos</h2>
