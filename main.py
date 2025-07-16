@@ -39,8 +39,8 @@ voice_join_times = {} # <--- ADICIONE ESTA LINHA
 
 # --- LISTA DE STATUS PARA O CARROSSEL ---
 status_list = cycle([
-    discord.Activity(type=discord.ActivityType.custom, name="Patrulhando Altura RP", state="🚓"),
-    discord.Activity(type=discord.ActivityType.watching, name=f"a cidade crescer!"),
+    discord.Activity(type=discord.ActivityType.watching, name="🚓 patrulhando Altura RP"),
+    discord.Activity(type=discord.ActivityType.watching, name="a cidade crescer!"),
     discord.Activity(type=discord.ActivityType.listening, name="as melhores da rádio"),
     discord.Game(name="com o comando /ip")
 ])
