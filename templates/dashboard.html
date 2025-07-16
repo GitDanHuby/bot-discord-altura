@@ -309,27 +309,26 @@ input, textarea {
         <h2>Suporte</h2>
         <label>Canal de Suporte:</label>
         <input type="text" name="support_channel">
-        <label>Mensagem Automática de Boas-Vindas:</label>
+        <label>Mensagem Automática:</label>
         <textarea name="support_message"></textarea>
-        <label>Tempo Estimado de Resposta:</label>
-        <input type="text" name="support_eta">
-      </div><!-- ABA DAILY --><div class="tab-content module" id="daily">
-        <h2>Recompensa Diária</h2>
-        <label>Valor da Recompensa:</label>
-        <input type="number" name="daily_reward">
-        <label>Mensagem de Entrega:</label>
-        <textarea name="daily_message"></textarea>
-        <label>Canal de Recompensa:</label>
-        <input type="text" name="daily_channel">
-      </div><!-- ABA WIKI --><div class="tab-content module" id="wiki">
-        <h2>Central de Ajuda (Wiki)</h2>
-        <label>URL da Wiki:</label>
+      </div>
+
+      <div class="tab-content module" id="daily">
+        <h2>Daily</h2>
+        <label>Recompensa Diária:</label>
+        <input type="text" name="daily_reward">
+        <label>Cooldown (em horas):</label>
+        <input type="number" name="daily_cooldown" min="0">
+      </div>
+
+      <div class="tab-content module" id="wiki">
+        <h2>Wiki</h2>
+        <label>Link da Página Wiki:</label>
         <input type="text" name="wiki_link">
-        <label>Texto de Ajuda no Painel:</label>
-        <textarea name="wiki_text"></textarea>
-        <label>Exibir Dicas no Painel:</label>
-        <input type="checkbox" name="wiki_tips_enabled">
-      </div><!-- ... restante do código continua com o botão de salvar e scripts ... -->
+        <label>Descrição Resumida:</label>
+        <textarea name="wiki_description"></textarea>
+      </div>
+        <!-- ... restante do código continua com o botão de salvar e scripts ... -->
       </div><button type="submit">Salvar Configurações</button>
 </form>
 
