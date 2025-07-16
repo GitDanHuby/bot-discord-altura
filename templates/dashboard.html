@@ -126,6 +126,20 @@ main {
   color: var(--cor-primaria);
 }
 
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
@@ -173,23 +187,57 @@ main {
       <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar">
     </div>
   </header>  <main>
-    <div id="config-gerais" class="tab-content active module">
-      <h2>Configurações Gerais</h2>
-      <p>Essa é a área principal do painel de configurações da Altura RP, inspirado no estilo Loritta.</p>
-    </div><div id="comandos" class="tab-content module">
-  <h2>Comandos</h2>
-  <p>Gerencie comandos personalizados e padrões do servidor.</p>
-</div>
+    <form id="settings-form">
+      <div id="config-gerais" class="tab-content active module">
+        <h2>Configurações Gerais</h2>
+        <label for="prefixo">Prefixo:</label>
+        <input type="text" id="prefixo" name="prefixo" value="{{ settings.get('prefixo', '+') }}">
+      </div><div id="moderacao" class="tab-content module">
+    <h2>Moderação</h2>
+    <label for="log_channel">Canal de Logs:</label>
+    <input type="text" id="log_channel" name="log_channel" value="{{ settings.get('log_channel', '') }}">
+  </div>
 
-<div id="premium" class="tab-content module">
-  <h2>Recursos Premium</h2>
-  <p>Gerencie chaves, multiplicadores e recursos extras do seu plano Premium.</p>
-</div>
+  <div id="comandos" class="tab-content module">
+    <h2>Comandos</h2>
+    <label for="comando_bloqueado">Comando bloqueado:</label>
+    <input type="text" id="comando_bloqueado" name="comando_bloqueado">
+  </div>
 
-<div id="wiki" class="tab-content module">
-  <h2>Wiki</h2>
-  <p>Links úteis e informações da wiki do Altura RP City.</p>
-</div>
+  <div id="permissoes" class="tab-content module">
+    <h2>Permissões</h2>
+    <label for="cargo_admin">Cargo de Admin:</label>
+    <input type="text" id="cargo_admin" name="cargo_admin">
+  </div>
+
+  <div id="youtube" class="tab-content module">
+    <h2>Configurações do YouTube</h2>
+    <label for="canal_youtube">Canal de YouTube:</label>
+    <input type="text" id="canal_youtube" name="canal_youtube">
+  </div>
+
+  <div id="xp" class="tab-content module">
+    <h2>Sistema de XP</h2>
+    <label for="xp_ativo">Ativar Sistema de XP?</label>
+    <input type="checkbox" id="xp_ativo" name="xp_ativo">
+  </div>
+
+  <div id="premium" class="tab-content module">
+    <h2>Chaves Premium</h2>
+    <label for="premium_key">Chave Premium:</label>
+    <input type="text" id="premium_key" name="premium_key">
+  </div>
+
+  <div id="comandosperso" class="tab-content module">
+    <h2>Comandos Personalizados</h2>
+    <label for="cmd_custom">Comando Customizado:</label>
+    <input type="text" id="cmd_custom" name="cmd_custom">
+    <label for="resposta_custom">Resposta:</label>
+    <textarea id="resposta_custom" name="resposta_custom"></textarea>
+  </div>
+
+  <button type="submit">Salvar Configurações</button>
+</form>
 
   </main>  <script>
     const allTabLinks = document.querySelectorAll('[data-tab]');
@@ -198,7 +246,6 @@ main {
     allTabLinks.forEach(link => {
       link.addEventListener('click', e => {
         e.preventDefault();
-
         const target = link.getAttribute('data-tab');
 
         allTabLinks.forEach(l => l.classList.remove('active'));
