@@ -61,6 +61,7 @@ body {
   text-decoration: none;
   color: white;
   border-radius: 8px;
+  cursor: pointer;
 }
 
 .sidebar nav a:hover,
@@ -90,6 +91,7 @@ body {
   color: var(--cor-texto);
   padding: 8px 12px;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .topbar .menu-links a:hover,
@@ -124,6 +126,9 @@ main {
   color: var(--cor-primaria);
 }
 
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
   </style>
 </head>
 <body>
@@ -132,46 +137,77 @@ main {
       <img src="https://cdn.discordapp.com/icons/1143964074134124544/34122ebcf9d93b1a002c71cf5f79a5d7.png?size=128" alt="Logo Altura RP">
       <h3>ALTURA RP CITY SEASON 1</h3>
     </div>
-    <nav>
-      <a href="#" class="active">⚙️ Configurações gerais</a>
-      <a href="#">🛡️ Moderação</a>
-      <a href="#">📜 Comandos</a>
-      <a href="#">🔐 Permissões</a>
-      <a href="#">🛡 GamerSafer</a>
-      <a href="#">🟢 Entrar/Sair</a>
-      <a href="#">📹 YouTube</a>
-      <a href="#">📺 Twitch</a>
-      <a href="#">🌀 Bluesky</a>
-      <a href="#">🛍 Loja Diária da Altura</a>
-      <a href="#">⭐ Níveis por Experiência</a>
-      <a href="#">🚫 Autorele</a>
-      <a href="#">🔒 Bloqueador de Convites</a>
-      <a href="#">👥 Contador de Membros</a>
-      <a href="#">📅 Eventos</a>
-      <a href="#">⭐ Reações da Comunidade</a>
-      <a href="#">📁 Registro de Auditoria</a>
-      <a href="#">💎 Premium Keys</a>
-      <a href="#">🎖 Emblemas</a>
-      <a href="#">📊 Multiplicador de XP</a>
-      <a href="#">⚙️ Comandos Personalizados</a>
+    <nav id="side-tabs">
+      <a data-tab="config-gerais" class="active">⚙️ Configurações gerais</a>
+      <a data-tab="moderacao">🛡️ Moderação</a>
+      <a data-tab="comandos">📜 Comandos</a>
+      <a data-tab="permissoes">🔐 Permissões</a>
+      <a data-tab="gamersafer">🛡 GamerSafer</a>
+      <a data-tab="entrar">🟢 Entrar/Sair</a>
+      <a data-tab="youtube">📹 YouTube</a>
+      <a data-tab="twitch">📺 Twitch</a>
+      <a data-tab="bluesky">🌀 Bluesky</a>
+      <a data-tab="loja">🛍 Loja Diária da Altura</a>
+      <a data-tab="xp">⭐ Níveis por Experiência</a>
+      <a data-tab="autorele">🚫 Autorele</a>
+      <a data-tab="bloqconvite">🔒 Bloqueador de Convites</a>
+      <a data-tab="contador">👥 Contador de Membros</a>
+      <a data-tab="eventos">📅 Eventos</a>
+      <a data-tab="reacoes">⭐ Reações da Comunidade</a>
+      <a data-tab="auditoria">📁 Registro de Auditoria</a>
+      <a data-tab="premium">💎 Premium Keys</a>
+      <a data-tab="emblemas">🎖 Emblemas</a>
+      <a data-tab="multiplicador">📊 Multiplicador de XP</a>
+      <a data-tab="comandosperso">⚙️ Comandos Personalizados</a>
       <a href="#" style="margin-top: 20px; background: #e74c3c;">🚪 Sair</a>
     </nav>
   </aside>  <header class="topbar">
-    <div class="menu-links">
-      <a href="#" class="active">💬 Suporte</a>
-      <a href="#">📜 Comandos</a>
-      <a href="#">🎯 Daily</a>
-      <a href="#">💎 Premium</a>
-      <a href="#">📖 Wiki</a>
+    <div class="menu-links" id="top-tabs">
+      <a data-tab="suporte" class="active">💬 Suporte</a>
+      <a data-tab="comandos">📜 Comandos</a>
+      <a data-tab="daily">🎯 Daily</a>
+      <a data-tab="premium">💎 Premium</a>
+      <a data-tab="wiki">📖 Wiki</a>
     </div>
     <div class="profile">
       <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar">
     </div>
   </header>  <main>
-    <div class="module">
+    <div id="config-gerais" class="tab-content active module">
       <h2>Configurações Gerais</h2>
       <p>Essa é a área principal do painel de configurações da Altura RP, inspirado no estilo Loritta.</p>
-    </div>
-  </main>
-</body>
+    </div><div id="comandos" class="tab-content module">
+  <h2>Comandos</h2>
+  <p>Gerencie comandos personalizados e padrões do servidor.</p>
+</div>
+
+<div id="premium" class="tab-content module">
+  <h2>Recursos Premium</h2>
+  <p>Gerencie chaves, multiplicadores e recursos extras do seu plano Premium.</p>
+</div>
+
+<div id="wiki" class="tab-content module">
+  <h2>Wiki</h2>
+  <p>Links úteis e informações da wiki do Altura RP City.</p>
+</div>
+
+  </main>  <script>
+    const allTabLinks = document.querySelectorAll('[data-tab]');
+    const allTabContents = document.querySelectorAll('.tab-content');
+
+    allTabLinks.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+
+        const target = link.getAttribute('data-tab');
+
+        allTabLinks.forEach(l => l.classList.remove('active'));
+        allTabContents.forEach(c => c.classList.remove('active'));
+
+        link.classList.add('active');
+        const activeTab = document.getElementById(target);
+        if (activeTab) activeTab.classList.add('active');
+      });
+    });
+  </script></body>
 </html>
