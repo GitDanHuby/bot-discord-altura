@@ -312,11 +312,183 @@ input, textarea {
   </div>
       </div>
       <div class="tab-content module" id="comandos">
-        <h2>Comandos</h2>
-        <label>Comando Personalizado:</label>
-        <input type="text" name="custom_command">
-        <label>Resposta:</label>
-        <textarea name="custom_response"></textarea>
+  <h2>Comandos do Altura RP</h2>
+  <p>Controle quais comandos estão ativados no seu servidor!</p>
+
+  <!-- /anunciar -->
+  <div class="command-group">
+    <label>/anunciar</label>
+    <p>Envia um anúncio embedado no canal configurado.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /aviso -->
+  <div class="command-group">
+    <label>/aviso</label>
+    <p>Cria um aviso simples com texto ou embed.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /clear -->
+  <div class="command-group">
+    <label>/clear</label>
+    <p>Limpa mensagens de um canal.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /configurar_tickets -->
+  <div class="command-group">
+    <label>/configurar_tickets</label>
+    <p>Inicia ou edita o sistema de tickets.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /dashboard -->
+  <div class="command-group">
+    <label>/dashboard</label>
+    <p>Exibe o link da dashboard do servidor Altura RP.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /embed -->
+  <div class="command-group">
+    <label>/embed</label>
+    <p>Cria uma mensagem em embed com título, descrição e cor.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /ip -->
+  <div class="command-group">
+    <label>/ip</label>
+    <p>Exibe o IP do servidor Altura RP.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /join -->
+  <div class="command-group">
+    <label>/join</label>
+    <p>Faz o bot entrar em um canal de voz.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /leaderboard -->
+  <div class="command-group">
+    <label>/leaderboard</label>
+    <p>Mostra o ranking dos usuários do servidor.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /leave -->
+  <div class="command-group">
+    <label>/leave</label>
+    <p>Faz o bot sair do canal de voz.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /limpar -->
+  <div class="command-group">
+    <label>/limpar</label>
+    <p>Apaga mensagens do canal atual.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /pause -->
+  <div class="command-group">
+    <label>/pause</label>
+    <p>Pausa a música que está tocando.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /ping -->
+  <div class="command-group">
+    <label>/ping</label>
+    <p>Verifica o ping do bot no servidor.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /play -->
+  <div class="command-group">
+    <label>/play</label>
+    <p>Reproduz uma música de um link ou nome.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /queue -->
+  <div class="command-group">
+    <label>/queue</label>
+    <p>Exibe a fila de músicas que estão por vir.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /rank -->
+  <div class="command-group">
+    <label>/rank</label>
+    <p>Mostra o rank do usuário no sistema de XP.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /redes_sociais -->
+  <div class="command-group">
+    <label>/redes_sociais</label>
+    <p>Exibe os links das redes sociais oficiais do servidor.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /regras -->
+  <div class="command-group">
+    <label>/regras</label>
+    <p>Mostra as regras do servidor Altura RP.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /resume -->
+  <div class="command-group">
+    <label>/resume</label>
+    <p>Retoma a reprodução de música pausada.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /set_goodbye_message -->
+  <div class="command-group">
+    <label>/set_goodbye_message</label>
+    <p>Define a mensagem de saída de membros do servidor.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /setip -->
+  <div class="command-group">
+    <label>/setip</label>
+    <p>Configura o IP do servidor exibido no comando /ip.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /skip -->
+  <div class="command-group">
+    <label>/skip</label>
+    <p>Pula a música atual da fila.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /status -->
+  <div class="command-group">
+    <label>/status</label>
+    <p>Mostra o status atual do bot.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /stop -->
+  <div class="command-group">
+    <label>/stop</label>
+    <p>Para a música e limpa a fila.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
+
+  <!-- /sugestao -->
+  <div class="command-group">
+    <label>/sugestao</label>
+    <p>Envia uma sugestão para a equipe do servidor.</p>
+    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+  </div>
       </div>
       <div class="tab-content module" id="permissoes">
         <h2>Permissões</h2>
