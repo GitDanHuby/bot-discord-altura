@@ -1,249 +1,273 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - Altura RP City</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
-        :root {
-            --cor-fundo-principal: #16181D;
-            --cor-fundo-secundario: #1F2128;
-            --cor-superficie: #282a36;
-            --cor-borda: #44475a;
-            --cor-texto-principal: #f8f8f2;
-            --cor-texto-secundario: #a8a8b3;
-            --cor-destaque: #50fa7b;
-            --cor-primaria: #bd93f9;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');:root {
+        --cor-fundo-principal: #16181D;
+        --cor-fundo-secundario: #1F2128;
+        --cor-superficie: #282a36;
+        --cor-borda: #44475a;
+        --cor-texto-principal: #f8f8f2;
+        --cor-texto-secundario: #a8a8b3;
+        --cor-destaque: #50fa7b;
+        --cor-primaria: #bd93f9;
+        --cor-vermelho: #ff5555;
+    }
 
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--cor-fundo-principal);
-            color: var(--cor-texto-principal);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: var(--cor-fundo-principal);
+        color: var(--cor-texto-principal);
+        display: flex;
+        height: 100vh;
+    }
 
-        /* --- Barra Lateral de Navegação --- */
-        .sidebar {
-            width: 250px;
-            background-color: var(--cor-fundo-secundario);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--cor-borda);
-            position: fixed;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .sidebar .profile {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--cor-borda);
-        }
-        .sidebar .profile img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid var(--cor-primaria);
-        }
-        .sidebar .profile h3 {
-            margin: 10px 0 0;
-            color: var(--cor-texto-principal);
-            font-size: 1.1em;
-        }
-        .sidebar nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .sidebar nav li a {
-            display: block;
-            padding: 13px 20px;
-            text-decoration: none;
-            color: var(--cor-texto-secundario);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-weight: 600;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .sidebar nav li a:hover, .sidebar nav li a.active {
-            background-color: var(--cor-primaria);
-            color: #FFFFFF;
-        }
-        .sidebar .logout-btn {
-            margin-top: auto;
-            background-color: #ff5555;
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-        }
+    .sidebar {
+        width: 250px;
+        background-color: var(--cor-fundo-secundario);
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--cor-borda);
+        padding: 20px;
+        box-sizing: border-box;
+    }
 
-        /* --- Conteúdo Principal --- */
-        .main-content {
-            margin-left: 250px; /* Espaço para a sidebar fixa */
-            flex-grow: 1;
-            padding: 40px;
-            overflow-y: auto;
-            height: 100vh;
-            box-sizing: border-box;
-        }
-        .page-content {
-            display: none;
-        }
-        .page-content.active {
-            display: block;
-        }
-        .module {
-            background-color: var(--cor-superficie);
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-        h1, h2 {
-            border-bottom: 1px solid var(--cor-borda);
-            padding-bottom: 10px;
-            color: var(--cor-destaque);
-        }
-        label { display: block; margin-top: 15px; font-weight: 600; }
-        textarea, input[type="text"] {
-            width: 95%;
-            background-color: var(--cor-fundo-principal);
-            color: var(--cor-texto-principal);
-            border: 1px solid var(--cor-borda);
-            border-radius: 5px;
-            padding: 12px;
-            font-size: 1em;
-            margin-top: 8px;
-        }
-        button[type="submit"] {
-            background: var(--cor-primaria);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .notification { position: fixed; top: 20px; right: 20px; background-color: #50fa7b; color: #282a36; padding: 15px; border-radius: 5px; font-weight: bold; z-index: 1000; }
-    </style>
+    .sidebar .logo {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .sidebar .logo img {
+        width: 100px;
+        border-radius: 10px;
+    }
+
+    .sidebar nav ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar nav li a {
+        display: block;
+        padding: 13px 20px;
+        text-decoration: none;
+        color: var(--cor-texto-secundario);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-weight: 600;
+        transition: background-color 0.2s, color 0.2s;
+    }
+
+    .sidebar nav li a:hover,
+    .sidebar nav li a.active {
+        background-color: var(--cor-primaria);
+        color: #ffffff;
+    }
+
+    .sidebar .logout-btn {
+        margin-top: auto;
+        background-color: var(--cor-vermelho);
+        color: white;
+        text-align: center;
+        padding: 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .main-content {
+        flex-grow: 1;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+
+    .top-header {
+        background-color: var(--cor-fundo-secundario);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 40px;
+        border-bottom: 1px solid var(--cor-borda);
+    }
+
+    .top-header .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .top-header .user-info img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--cor-primaria);
+    }
+
+    .top-header .user-info h3 {
+        margin: 0;
+        font-size: 1.1em;
+        color: var(--cor-texto-principal);
+    }
+
+    .tabs {
+        display: flex;
+        background-color: var(--cor-superficie);
+        padding: 10px 40px;
+        gap: 20px;
+    }
+
+    .tabs button {
+        background: none;
+        border: none;
+        color: var(--cor-texto-secundario);
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    .tabs button.active {
+        border-bottom: 2px solid var(--cor-primaria);
+        color: var(--cor-destaque);
+    }
+
+    .page-content {
+        display: none;
+        padding: 40px;
+    }
+
+    .page-content.active {
+        display: block;
+    }
+
+    .module {
+        background-color: var(--cor-superficie);
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+
+    h1, h2 {
+        border-bottom: 1px solid var(--cor-borda);
+        padding-bottom: 10px;
+        color: var(--cor-destaque);
+    }
+
+    input[type="text"], textarea {
+        width: 100%;
+        background-color: var(--cor-fundo-principal);
+        color: var(--cor-texto-principal);
+        border: 1px solid var(--cor-borda);
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 8px;
+    }
+
+    button[type="submit"] {
+        background-color: var(--cor-primaria);
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+</style>
+
 </head>
 <body>
     <aside class="sidebar">
-        <div class="profile">
-            <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar">
-            <h3>{{ user.username }}</h3>
+        <div class="logo">
+            <img src="https://cdn.discordapp.com/icons/{{ server.id }}/{{ server.icon }}.png?size=128" alt="Logo do Servidor">
         </div>
         <nav>
             <ul>
-                <li><a href="#" class="nav-link active" data-target="geral">⚙️ Configurações Gerais</a></li>
+                <li><a href="#" class="nav-link active" data-target="geral">⚙️ Geral</a></li>
                 <li><a href="#" class="nav-link" data-target="mensagens">✉️ Mensagens</a></li>
+                <li><a href="#" class="nav-link" data-target="comandos">📜 Comandos</a></li>
+                <li><a href="#" class="nav-link" data-target="permissoes">🔐 Permissões</a></li>
+                <li><a href="#" class="nav-link" data-target="notificacoes">🔔 Notificações</a></li>
             </ul>
         </nav>
         <a href="/logout" class="logout-btn">Sair</a>
-    </aside>
+    </aside><div class="main-content">
+    <header class="top-header">
+        <h1>Altura RP City - Painel</h1>
+        <div class="user-info">
+            <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png?size=128" alt="Avatar do Usuário">
+            <h3>{{ user.username }}</h3>
+        </div>
+    </header>
 
-    <main class="main-content">
-        <form id="settings-form">
-            <h1>Painel de Controle</h1>
-            
-            <div class="module" style="text-align: center; padding: 15px;">
-                <a href="https://www.game-state.com/190.102.40.142:7887/">
-                    <img src="https://www.game-state.com/190.102.40.142:7887/560x95_FFFFFF_FF9900_000000_000000.png" alt="Status do Servidor SA-MP" style="border:none; max-width:100%;" />
-                </a>
-            </div>
+    <div class="tabs">
+        <button class="tab-button active" data-target="geral">Geral</button>
+        <button class="tab-button" data-target="mensagens">Mensagens</button>
+        <button class="tab-button" data-target="comandos">Comandos</button>
+        <button class="tab-button" data-target="permissoes">Permissões</button>
+        <button class="tab-button" data-target="notificacoes">Notificações</button>
+    </div>
 
-            <div id="geral" class="page-content active">
-                <div class="module">
-                    <h2>Módulos</h2>
-                    <input type="checkbox" name="xp_system_enabled" id="xp-toggle" {{ 'checked' if settings.get('xp_system_enabled', 'true') != 'false' else '' }}>
-                    <label for="xp-toggle" style="display: inline-block;">Sistema de Níveis (XP)</label>
-                </div>
-                <div class="module">
-                    <h2>Configuração de IDs</h2>
-                    <label>Canal de Logs de Auditoria:</label>
-                    <input type="text" name="audit_log_channel_id" value="{{ settings.get('audit_log_channel_id', '') }}">
+    <div id="geral" class="page-content active">
+        <div class="module">
+            <h2>Configurações Gerais</h2>
+            <!-- Conteúdo da aba Geral -->
+        </div>
+    </div>
 
-                    <label>Canal de Logs de Voz:</label>
-                    <input type="text" name="voice_log_channel_id" value="{{ settings.get('voice_log_channel_id', '') }}">
+    <div id="mensagens" class="page-content">
+        <div class="module">
+            <h2>Mensagens</h2>
+            <!-- Conteúdo da aba Mensagens -->
+        </div>
+    </div>
 
-                    <label>Canal de Logs de Msgs Deletadas:</label>
-                    <input type="text" name="delete_log_channel_id" value="{{ settings.get('delete_log_channel_id', '') }}">
+    <div id="comandos" class="page-content">
+        <div class="module">
+            <h2>Comandos</h2>
+            <!-- Conteúdo da aba Comandos -->
+        </div>
+    </div>
 
-                    <label>Canal de Logs de Avisos:</label>
-                    <input type="text" name="warn_log_channel_id" value="{{ settings.get('warn_log_channel_id', '') }}">
+    <div id="permissoes" class="page-content">
+        <div class="module">
+            <h2>Permissões</h2>
+            <!-- Conteúdo da aba Permissões -->
+        </div>
+    </div>
 
-                    <label>Canal de Sugestões:</label>
-                    <input type="text" name="sugestao_channel_id" value="{{ settings.get('sugestao_channel_id', '') }}">
+    <div id="notificacoes" class="page-content">
+        <div class="module">
+            <h2>Notificações</h2>
+            <!-- Conteúdo da aba Notificações -->
+        </div>
+    </div>
+</div>
 
-                    <label>Canal de Logs de Tickets:</label>
-                    <input type="text" name="ticket_log_channel_id" value="{{ settings.get('ticket_log_channel_id', '') }}">
-                </div>
-                 <div class="module">
-                    <h3>Sistema de Parceria</h3>
-                     <label>ID do Cargo Gatilho:</label>
-                     <input type="text" name="parceria_gatilho_role_id" value="{{ settings.get('parceria_gatilho_role_id', '') }}">
+<script>
+    const navLinks = document.querySelectorAll('.nav-link');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const pages = document.querySelectorAll('.page-content');
 
-                     <label>ID do Canal de Anúncio:</label>
-                     <input type="text" name="parceria_anuncio_channel_id" value="{{ settings.get('parceria_anuncio_channel_id', '') }}">
+    function activateTab(targetId) {
+        pages.forEach(page => page.classList.remove('active'));
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        navLinks.forEach(link => link.classList.remove('active'));
 
-                     <label>ID do Cargo Ping:</label>
-                     <input type="text" name="parceria_ping_role_id" value="{{ settings.get('parceria_ping_role_id', '') }}">
-                    </div>
-            </div>
+        document.getElementById(targetId).classList.add('active');
+        document.querySelectorAll(`[data-target="${targetId}"]`).forEach(el => el.classList.add('active'));
+    }
 
-            <div id="mensagens" class="page-content">
-                <h2>Mensagens Customizáveis</h2>
-                <div class="module">
-                    <label for="welcome_message">Mensagem de Boas-Vindas:</label>
-                    <p><small>Use {member.mention}, {server.name}, etc.</small></p>
-                    <textarea name="welcome_message" rows="5">{{ settings.get('welcome_message', '') }}</textarea>
-                    
-                    <br><br>
-                    
-                    <label for="welcome_gif_url">URL do GIF de Boas-Vindas (Opcional):</label>
-                    <input type="text" id="welcome_gif_url" name="welcome_gif_url" value="{{ settings.get('welcome_gif_url', 'https://cdn.discordapp.com/attachments/1394714190027030689/1394714259455475864/bem-vindo.gif?ex=6877d05f&is=68767edf&hm=5e181feb45400b610970ca71918d1d389c9e27d081eea9afb455fee7b78c8a0d&') }}">
-                    
-                    <br><br>
-                    
-                    <label for="goodbye_message">Mensagem de Despedida:</label>
-                    <p><small>Use {member.name}, {server.name}, etc.</small></p>
-                    <textarea name="goodbye_message" rows="5">{{ settings.get('goodbye_message', '') }}</textarea>
-                </div>
-            </div>
-            
-            <button type="submit">Salvar Todas as Configurações</button>
-        </form>
-    </main>
-
-    <script>
-        // Script para a navegação por abas
-        const navLinks = document.querySelectorAll('.nav-link');
-        const pages = document.querySelectorAll('.page-content');
-
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                navLinks.forEach(l => l.classList.remove('active'));
-                pages.forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
-                document.getElementById(this.dataset.target).classList.add('active');
-            });
+    [...navLinks, ...tabButtons].forEach(el => {
+        el.addEventListener('click', e => {
+            e.preventDefault();
+            activateTab(el.dataset.target);
         });
+    });
+</script>
 
-        // Script para salvar o formulário que já tínhamos
-        document.getElementById('settings-form').addEventListener('submit', function(event) {
-            // ... (o script de salvar continua aqui, sem alterações) ...
-        });
-    </script>
 </body>
 </html>
