@@ -189,10 +189,55 @@ input, textarea {
   </header>  <main>
     <form id="settings-form">
       <!-- ABA AUTOMÁTICA COM TODOS OS CAMPOS PADRÕES ADICIONADOS -->
-      <div class="tab-content active module" id="config-gerais">
-        <h2>Configurações Gerais</h2>
-        <label>Prefixo:</label>
-        <input type="text" name="prefixo">
+      <div class="tab-content module" id="configuracoes">
+  <h2>Configurações Gerais</h2>
+
+  <!-- Prefixo -->
+  <div class="form-group">
+    <label for="prefixo">Prefixo da Loritta</label>
+    <p>O prefixo é o texto que vem antes de um comando. Por padrão é "+" ou "!", mas você pode alterar aqui.</p>
+    <input type="text" id="prefixo" placeholder="Ex: +" class="form-control">
+    <div class="prefixo-exemplo">
+      <p><strong>Exemplo:</strong></p>
+      <p><code>+ping</code> → <strong>Loritta:</strong> Pong!</p>
+    </div>
+  </div>
+
+  <!-- Deletar mensagem ao executar -->
+  <div class="form-group">
+    <label for="deletarMensagem">Deletar mensagem do usuário ao executar um comando</label>
+    <input type="checkbox" id="deletarMensagem">
+  </div>
+
+  <!-- Avisar ao usuário comando desconhecido -->
+  <div class="form-group">
+    <label for="avisarDesconhecido">Avisar ao usuário quando ele executar um comando desconhecido</label>
+    <input type="checkbox" id="avisarDesconhecido">
+  </div>
+
+  <!-- Canais proibidos -->
+  <div class="form-group">
+    <label for="canalProibido">Canais onde comandos são proibidos</label>
+    <div class="inline-form">
+      <input type="text" id="canalProibido" placeholder="#verificação" class="form-control">
+      <button class="btn">Adicionar</button>
+    </div>
+    <ul id="listaCanaisProibidos">
+      <li>#✅┃verificação</li>
+    </ul>
+  </div>
+
+  <!-- Mensagem personalizada canal proibido -->
+  <div class="form-group">
+    <label for="mensagemProibido">Mensagem personalizada ao usar comando em canal proibido</label>
+    <textarea id="mensagemProibido" rows="3" class="form-control">@user Você não pode usar comandos no @channel, bobinho(a)</textarea>
+    <p><small>Exemplo: <code>@Loritta Você não pode usar comandos no #verificação, bobinho(a)</code></small></p>
+  </div>
+
+  <!-- Salvar -->
+  <div class="form-group">
+    <button class="btn btn-success">Salvar</button>
+  </div>
       </div>
       <div class="tab-content module" id="moderacao">
         <h2>Moderação</h2>
