@@ -36,12 +36,13 @@ xp_cooldowns = {}
 music_queues = {}
 voice_join_times = {} # <--- ADICIONE ESTA LINHA
 
-# Lista de status que ficarão em loop
+
+# --- LISTA DE STATUS PARA O CARROSSEL ---
 status_list = cycle([
-    discord.Game(name="na cidade do Altura RP City"),
-    discord.Activity(type=discord.ActivityType.watching, name="as ruas da cidade 🚓"),
-    discord.Activity(type=discord.ActivityType.listening, name="à Rádio Los Santos"),
-    discord.Game(name="com o /ip no máximo!")
+    discord.Activity(type=discord.ActivityType.custom, name="Patrulhando Altura RP", state="🚓"),
+    discord.Activity(type=discord.ActivityType.watching, name=f"a cidade crescer!"),
+    discord.Activity(type=discord.ActivityType.listening, name="as melhores da rádio"),
+    discord.Game(name="com o comando /ip")
 ])
 
 # --- FUNÇÃO AUXILIAR PARA PEGAR CONFIGURAÇÕES DO DB ---
@@ -940,6 +941,7 @@ async def leaderboard(interaction: discord.Interaction):
 async def change_status():
     new_activity = next(status_list)
     await client.change_presence(activity=new_activity)
+    
 
 @client.event
 async def on_ready():
@@ -958,6 +960,7 @@ async def on_ready():
     
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
+
     
 # DENTRO DO main.py, SUBSTITUA APENAS ESTA FUNÇÃO
 @client.event
