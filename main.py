@@ -943,24 +943,6 @@ async def change_status():
     new_activity = next(status_list)
     await client.change_presence(activity=new_activity)
 
-async def set_custom_status():
-    payload = {
-        "op": 3,
-        "d": {
-            "since": 0,
-            "activities": [
-                {
-                    "type": 4,  # Custom Status
-                    "state": "🚓 patrulhando Altura RP"
-                }
-            ],
-            "status": "online",
-            "afk": False
-        }
-    }
-
-# ...dentro da função set_custom_status
-await client.ws.send(json.dumps(payload))  # isso corrige o erro
 
 @client.event
 async def on_ready():
@@ -977,7 +959,24 @@ async def on_ready():
     
     print(f'{client.user} conectou-se ao Discord!')
     print('Bot está online e pronto para uso.')
+    
+async def set_custom_status():
+    payload = {
+        "op": 3,
+        "d": {
+            "since": 0,
+            "activities": [
+                {
+                    "type": 4,  # Custom Status
+                    "state": "🚓 patrulhando Altura RP"
+                }
+            ],
+            "status": "online",
+            "afk": False
+        }
+    }
 
+    await client.ws.send(json.dumps(payload))  # <-- agora tá DENTRO da função
     
 # DENTRO DO main.py, SUBSTITUA APENAS ESTA FUNÇÃO
 @client.event
