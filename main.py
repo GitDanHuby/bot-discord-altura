@@ -18,6 +18,7 @@ from yt_dlp import YoutubeDL
 from sqlalchemy import desc
 from discord.ext import tasks
 from itertools import cycle
+import json
 
 # --- Configuração Inicial ---
 load_dotenv()
@@ -958,7 +959,8 @@ async def set_custom_status():
         }
     }
 
-    await client.ws.send(payload)
+# ...dentro da função set_custom_status
+await client.ws.send(json.dumps(payload))  # isso corrige o erro
 
 @client.event
 async def on_ready():
